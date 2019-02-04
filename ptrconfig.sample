@@ -1,0 +1,13 @@
+[ptr]
+atonce = 10
+exclude_patterns =
+  build*
+  yocto
+extra_build_env_prefix = /usr/local/fbcode/platform007
+pypi_url = https://pypi.org/simple/
+venv_pkgs =
+  black
+  coverage
+  mypy
+  pip
+  setuptools
