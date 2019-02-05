@@ -1,9 +1,0 @@
-ptr.py
-ptr_tests.py
-ptr_tests_fixtures.py
-setup.py
-ptr.egg-info/PKG-INFO
-ptr.egg-info/SOURCES.txt
-ptr.egg-info/dependency_links.txt
-ptr.egg-info/entry_points.txt
-ptr.egg-info/top_level.txt

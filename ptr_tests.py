@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-present, Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+# coding=utf8
 
 import asyncio
 import unittest
 from collections import defaultdict
 from pathlib import Path
+from platform import system
 from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory, gettempdir
@@ -92,7 +97,7 @@ class TestPtr(unittest.TestCase):
                 ptr_tests_fixtures.FAKE_TG_REQ_COVERAGE,
                 ptr_tests_fixtures.SAMPLE_TG_REPORT_OUTPUT,
             ),
-            ptr_tests_fixtures.EXPECTED_TG_COVERAGE_FAIL_RESULT,
+            ptr_tests_fixtures.EXPECTED_PTR_COVERAGE_FAIL_RESULT,
         )
 
         rmtree(fake_venv_path)
@@ -151,6 +156,22 @@ class TestPtr(unittest.TestCase):
                 setup_pys.pop().relative_to(td_path), Path("cooper/setup.py")
             )
 
+    def test_generate_black_command(self) -> None:
+        black_exe = Path("/bin/black")
+        with TemporaryDirectory() as td:
+            module_dir = Path(td)
+            subdir = module_dir / "awlib"
+            subdir.mkdir()
+            py2 = subdir / "awesome2.py"
+            py1 = module_dir / "awesome.py"
+            for afile in (py1, py2):
+                afile.touch()
+
+            self.assertEqual(
+                ptr._generate_black_cmd(module_dir, black_exe),
+                (str(black_exe), "--check", str(py1), str(py2)),
+            )
+
     def test_generate_install_cmd(self) -> None:
         python_exe = "python3"
         module_dir = "/tmp/awesome"
@@ -163,11 +184,10 @@ class TestPtr(unittest.TestCase):
     def test_generate_mypy_cmd(self) -> None:
         with TemporaryDirectory() as td:
             td_path = Path(td)
-            setup_py_path = td_path / "setup.py"
             mypy_exe = Path("mypy")
             mypy_ini_path = td_path / "mypy.ini"
             entry_py_path = td_path / "cooper_is_awesome.py"
-            for a_path in (setup_py_path, mypy_ini_path, entry_py_path):
+            for a_path in (mypy_ini_path, entry_py_path):
                 a_path.touch()
 
             conf = {
@@ -175,7 +195,7 @@ class TestPtr(unittest.TestCase):
                 "entry_point_module": entry_py_path.name.replace(".py", ""),
             }
             self.assertEqual(
-                ptr._generate_mypy_cmd(setup_py_path, mypy_exe, conf),
+                ptr._generate_mypy_cmd(td_path, mypy_exe, conf),
                 (str(mypy_exe), "--config", str(mypy_ini_path), str(entry_py_path)),
             )
 
@@ -204,7 +224,8 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(stderr, b"")
 
         with self.assertRaises(CalledProcessError):
-            self.loop.run_until_complete(ptr._gen_check_output(("/bin/false",)))
+            false = "/usr/bin/false" if system() == "Darwin" else "/bin/false"
+            self.loop.run_until_complete(ptr._gen_check_output((false,)))
 
     def test_handle_debug(self) -> None:
         self.assertEqual(ptr._handle_debug(True), True)
@@ -243,13 +264,13 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(mock_log.call_count, 2)
 
     def test_set_build_env(self) -> None:
-        platform007 = Path("/usr/local/fbcode/platform007")
-        build_env = ptr._set_build_env(platform007)
+        local_build = Path("/usr/local")
+        build_env = ptr._set_build_env(local_build)
         self.assertTrue(
-            "{}/include".format(str(platform007)) in build_env["C_INCLUDE_PATH"]
+            "{}/include".format(str(local_build)) in build_env["C_INCLUDE_PATH"]
         )
         self.assertTrue(
-            "{}/include".format(str(platform007)) in build_env["CPLUS_INCLUDE_PATH"]
+            "{}/include".format(str(local_build)) in build_env["CPLUS_INCLUDE_PATH"]
         )
 
     def test_set_pip_mirror(self) -> None:
@@ -301,7 +322,7 @@ class TestPtr(unittest.TestCase):
                         69, fake_tests_to_run, fake_setup_py, fake_venv_path, {}, True
                     )
                 ),
-                (None, 4),
+                (None, 5),
             )
             # Ensure we've "printed coverage"
             self.assertTrue(mock_print.called)

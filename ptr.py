@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-# Copyright 2004-present Facebook. All Rights Reserved.
+# Copyright (c) Facebook, Inc. and its affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+# coding=utf8
 
 import argparse
 import ast
@@ -67,6 +71,7 @@ class StepName(Enum):
     tests_run = 2
     analyze_coverage = 3
     mypy_run = 4
+    black_run = 5
 
 
 coverage_line = namedtuple("coverage_line", ["stmts", "miss", "cover", "missing"])
@@ -182,6 +187,12 @@ def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
         )
 
 
+def _generate_black_cmd(module_dir: Path, black_exe: Path) -> Tuple[str, ...]:
+    py_files = set()  # type: Set[str]
+    find_py_files(py_files, module_dir)
+    return (str(black_exe), "--check", *sorted(py_files))
+
+
 def _generate_install_cmd(
     pip_exe: str, module_dir: str, config: Dict[str, Any]
 ) -> Tuple[str, ...]:
@@ -194,17 +205,15 @@ def _generate_install_cmd(
 
 
 def _generate_mypy_cmd(
-    setup_py_path: Path, mypy_exe: Path, config: Dict
+    module_dir: Path, mypy_exe: Path, config: Dict
 ) -> Tuple[str, ...]:
     if config["run_mypy"]:
-        mypy_entry_point = setup_py_path.parent / "{}.py".format(
-            config["entry_point_module"]
-        )
+        mypy_entry_point = module_dir / "{}.py".format(config["entry_point_module"])
     else:
         return ()
 
     cmds = [str(mypy_exe)]
-    mypy_ini_path = setup_py_path.parent / "mypy.ini"
+    mypy_ini_path = module_dir / "mypy.ini"
     if mypy_ini_path.exists():
         cmds.extend(["--config", str(mypy_ini_path)])
     cmds.append(str(mypy_entry_point))
@@ -353,6 +362,7 @@ async def _test_steps_runner(
     env: Dict,
     print_cov: bool = False,
 ) -> Tuple[Optional[test_result], int]:
+    black_exe = venv_path / "bin" / "black"
     coverage_exe = venv_path / "bin" / "coverage"
     mypy_exe = venv_path / "bin" / "mypy"
     pip_exe = venv_path / "bin" / "pip"
@@ -392,8 +402,15 @@ async def _test_steps_runner(
         step(
             StepName.mypy_run,
             bool("run_mypy" in config and config["run_mypy"]),
-            _generate_mypy_cmd(setup_py_path, mypy_exe, config),
+            _generate_mypy_cmd(setup_py_path.parent, mypy_exe, config),
             "Running mypy for {}".format(setup_py_path),
+            config["test_suite_timeout"],
+        ),
+        step(
+            StepName.black_run,
+            bool("run_black" in config and config["run_black"]),
+            _generate_black_cmd(setup_py_path.parent, black_exe),
+            "Running black for {}".format(setup_py_path),
             config["test_suite_timeout"],
         ),
     )
@@ -519,10 +536,10 @@ async def create_venv(
     mirror: str, py_exe: str = sys.executable, install_pkgs: bool = True
 ) -> Optional[Path]:
     start_time = time()
-    venv_path = Path(gettempdir()) / "tg_tests_{}".format(getpid())
+    venv_path = Path(gettempdir()) / "ptr_venv_{}".format(getpid())
     pip_exe = venv_path / "bin" / "pip"
     try:
-        await _gen_check_output((py_exe, "-m" "venv", str(venv_path)))
+        await _gen_check_output((py_exe, "-m", "venv", str(venv_path)))
         _set_pip_mirror(venv_path, mirror)
         if install_pkgs:
             await _gen_check_output(
@@ -595,7 +612,7 @@ def print_test_results(
     total_time = -1 if "runtime.all_tests" not in stats else stats["runtime.all_tests"]
     print("-- Summary (total time {}s):\n".format(total_time))
     print(
-        "PASS: {}\nFAIL: {}\nTIMEOUT: {}\nTOTAL: {}\n".format(
+        "✅ PASS: {}\n❌ FAIL: {}\n⌛️ TIMEOUT: {}\n💩 TOTAL: {}\n".format(
             stats["total.passes"],
             stats["total.fails"],
             stats["total.timeouts"],
@@ -618,6 +635,15 @@ def print_test_results(
         print(fail_output)
 
     return stats
+
+
+def find_py_files(py_files: Set[str], base_dir: Path) -> None:
+    dirs = [d for d in base_dir.iterdir() if d.is_dir()]
+    py_files.update(
+        {str(x) for x in base_dir.iterdir() if x.is_file() and x.suffix == ".py"}
+    )
+    for directory in dirs:
+        find_py_files(py_files, directory)
 
 
 async def run_tests(

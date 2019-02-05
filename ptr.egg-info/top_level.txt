@@ -1,3 +1,0 @@
-ptr
-ptr_tests
-ptr_tests_fixtures
