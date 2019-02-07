@@ -1,0 +1,5 @@
+black
+coverage
+mypy
+pip
+setuptools
