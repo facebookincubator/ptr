@@ -4,7 +4,6 @@ dist: xenial
 matrix:
   fast_finish: true
   include:
-    - python: 3.5
     - python: 3.6
     - python: 3.6
       env: PTR_INTEGRATION=1
@@ -13,7 +12,6 @@ matrix:
       env: PTR_INTEGRATION=1
     - python: 3.8-dev
   allow_failures:
-    - python: 3.5
     - python: 3.8-dev
 
 script:
