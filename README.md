@@ -2,38 +2,38 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-Python Test Runner (ptr) was born to run test in an opinionated way, within arbitrary code repositories. `ptr` supports many Python projects with unit tests defined in their `setup.(cfg|py)` files per repository. `ptr` allows developers to test multiple projects/modules in one Python environment through the use of a single test virtual environment.
+Python Test Runner (ptr) was born to run tests in an opinionated way, within arbitrary code repositories.
+`ptr` supports many Python projects with unit tests defined in their `setup.(cfg|py)` files per repository.
+`ptr` allows developers to test multiple projects/modules in one Python environment through the use of a single test virtual environment.
 
 - `ptr` requires `>=` **python 3.6**
+- `ptr` itself uses `ptr` to run its tests 👌🏼
 
-By adding ptr configuration to your `setup.cfg` *(soon)* or `setup.py` you can have ptr:
+By adding `ptr` configuration to your `setup.cfg` *(soon)* or `setup.py` you can have `ptr` perform the following, per test suite, in parallel:
 - run your test suite
-- check + enforce coverage requirements (via [coverage](https://pypi.org/project/coverage/)),
+- check and enforce coverage requirements (via [coverage](https://pypi.org/project/coverage/)),
 - format code (via [black](https://pypi.org/project/black/))
 - perform static type analysis (via [mypy](http://mypy-lang.org/))
 
-per test suite in parallel.
-
 ## How does `ptr` perform this magic? 🎩
-I'm glad you ask. Under the covers `ptr` performs:
 
-* Recursively searches for `setup.(cfg|py)` files from *BASE_DIR* (defaults to your "current working directory" (CWD))
-   * [AST](https://docs.python.org/3/library/ast.html) parses out the config for each `setup.py` test requirements
-   * If a `setup.cfg` exists, load via configparser and prefer if a `[ptr]` section exists (*coming soon*)
-* Creates a [Python Virtual Environment](https://docs.python.org/3/tutorial/venv.html) (*OPTIONALLY* pointed at an internal PyPI mirror)
-* Runs *ATONCE* tests suites in parallel (i.e. per setup.(cfg|ptr))
-* All steps will be run for each suite and ONLY *FAILED* runs will have output written to stdout
+I'm glad you ask. Under the covers `ptr` performs:
+- Recursively searches for `setup.(cfg|py)` files from `BASE_DIR` (defaults to your "current working directory" (CWD))
+   - [AST](https://docs.python.org/3/library/ast.html) parses out the config for each `setup.py` test requirements
+   - If a `setup.cfg` exists, load via configparser and prefer if a `[ptr]` section exists (*coming soon*)
+- Creates a [Python Virtual Environment](https://docs.python.org/3/tutorial/venv.html) (*OPTIONALLY* pointed at an internal PyPI mirror)
+- Runs `ATONCE` tests suites in parallel (i.e. per setup.(cfg|ptr))
+- All steps will be run for each suite and ONLY *FAILED* runs will have output written to stdout
 
 ## Usage 🤓
 
-To use ptr all you need to do is cd or set the base dir via `-b` and run pty.py
+To use `ptr` all you need to do is cd or set the base dir via `-b` and run `pty`:
 
-`ptr [-dk] [-b some/path] [--venv /tmp/existing_venv]`
+    $ ptr [-dk] [-b some/path] [--venv /tmp/existing_venv]
 
 For **faster runs** when testing, it is recommended to reuse a Virtual Environment:
-
-* `-k` - To keep a created virtualenv
-* Use `--venv VENV_PATH` to reuse to save the venv's creation time.
+- `-k` - To keep the virtualenv created by `ptr`.
+- Use `--venv VENV_PATH` to reuse to an existing virtualenv created by the user.
 
 ### Help Output 🙋‍♀️ 🙋‍♂️
 
@@ -60,19 +60,23 @@ optional arguments:
 
 ## Configuration 🧰
 
-Place the following files and with appropriate options set for your project to have it's suites ran.
+`ptr` is configured by placing directives in one or more of the following files.  `.ptrconfig` provides
+base configuration and default values for all projects in the repository, while each `setup.(cfg|py)`
+overrides the base configuration for the respective packages they define.
 
 ### `.ptrconfig`
+
 `ptr` supports a general config in `ini` ([ConfigParser](https://docs.python.org/3/library/configparser.html)) format.
 A `.ptrconfig` file can be placed at the root of any repository or in any directory within your repository.
 The first `.ptrconfig` file found via a recursive walk to the root ("/" in POSIX systems) will be used.
-- Please refer to `ptrconfig.sample` for the options available
+
+Please refer to [`ptrconfig.sample`](http://github.com/facebookincubator/ptr/blob/master/ptrconfig.sample) for the options available.
 
 ### `setup.py`
-This is per project in your repository. Here is an example simple
-- `ptr` itself uses `ptr` to run it's tests 👌🏼
 
-```
+This is per project in your repository. A simple example, based on `ptr` itself:
+
+```python
 # Specific Python Test Runner (ptr) params for Unit Testing Enforcement
 ptr_params = {
     # Where mypy will run to type check your program
@@ -94,17 +98,16 @@ ptr_params = {
 **Coming soon**
 
 This is per project in your repository.
-- Please refer to `setup.cfg.sample`
 
+Please refer to [`setup.cfg.sample`](http://github.com/facebookincubator/ptr/blob/master/ptrconfig.sample) for the options available.
 
 ### mypy Specifics
 
 When enabled, (in `setup.(cfg|py)`) **mypy** can support using a custom `mypy.ini` for each setup.py (module) defined.
 
-To have ptr run mypy using you config:
-
-* create a `mypy.ini` in the same directory as your `setup.py`
-* OR add **[mypy]** section to your `setup.cfg`
+To have `ptr` run mypy using you config:
+- create a `mypy.ini` in the same directory as your `setup.py`
+- OR add **[mypy]** section to your `setup.cfg`
 
 `mypy` Configuration Documentation can be found [here](https://mypy.readthedocs.io/en/stable/config_file.html)
 
@@ -126,6 +129,7 @@ warn_return_any = True
 Here are some example runs.
 
 ## Successful `ptr` Run:
+
 Here is what you want to see in your CI logs!
 ```
 [2019-02-06 21:51:45,442] INFO: Starting ptr.py (ptr.py:782)
@@ -145,9 +149,11 @@ Here is what you want to see in your CI logs!
 -- 1 / 1 (100%) `setup.py`'s have `ptr` tests running
 ```
 ## Unsuccessful `ptr` Run Examples:
+
 Here are some examples of runs failing. Any "step" can fail. All output is predominately the underlying tool.
 
 ### Unit Test Failure
+
 ```
 [2019-02-06 21:53:58,121] INFO: Starting ptr.py (ptr.py:782)
 [2019-02-06 21:53:58,143] INFO: Installing /Users/cooper/repos/ptr/setup.py + deps (ptr.py:417)
@@ -178,7 +184,9 @@ Ran 24 tests in 3.221s
 
 FAILED (failures=1)
 ```
+
 ### Coverage Failure
+
 ```
 [2019-02-06 21:55:42,947] INFO: Starting ptr.py (ptr.py:782)
 [2019-02-06 21:55:42,969] INFO: Installing /Users/cooper/repos/ptr/setup.py + deps (ptr.py:417)
@@ -201,6 +209,7 @@ The following files did not meet coverage requirements:
 ```
 
 ### black
+
 ```
 [2019-02-06 22:34:20,029] INFO: Starting ptr.py (ptr.py:804)
 [2019-02-06 22:34:20,060] INFO: Installing /Users/cooper/repos/ptr/setup.py + deps (ptr.py:430)
@@ -226,6 +235,7 @@ All done! 💥 💔 💥
 ```
 
 ### mypy
+
 ```
 [2019-02-06 22:35:39,480] INFO: Starting ptr.py (ptr.py:802)
 [2019-02-06 22:35:39,531] INFO: Installing /Users/cooper/repos/ptr/setup.py + deps (ptr.py:428)
@@ -253,24 +263,28 @@ All done! 💥 💔 💥
 # FAQ ⁉️
 
 ### Q. How do I debug? I need output!
-- **ptr** developers recommend that if you want output, please cause a test to fail
+
+- `ptr` developers recommend that if you want output, please cause a test to fail
   - e.g. `raise ZeroDivisionError`
 - Another recommended way is to run your tests with the default `setup.py test` using a `ptr` created venv:
   - `cd to/my/code`
   - `/tmp/venv/bin/python setup.py test`
 
 ### Q. How do I get specific version of black, coverage, mypy etc.?
+
 - Just simply hard set the version in the .ptrconfig in your repo
-- All `pip` [PEP 440 version specifiers]() are supported
+- All `pip` [PEP 440 version specifiers](https://www.python.org/dev/peps/pep-0440/) are supported
 
 ### Q. Why is the venv creation so slow?
+
 - `ptr` attempts to update from a PyPI compatible mirror (PEP 381) or PyPI itself
 - Running a package cache or local mirror can greatly increase speed. Example software to do this:
-  - [bandersnatch](https://pypi.org/projects/bandersnatch): Can do selected or FULL PyPI mirrors. The maintainer is also devilishly good looking.
-  - [devpi](): Can be ran and used to *proxy* packages locally when pip goes out to grab your dependencies.
-- Please ensure you're using the `-k` + `--venv` option to no recreate a virtualenv each run when debugging your tests!
+  - [bandersnatch](https://pypi.org/project/bandersnatch): Can do selected or FULL PyPI mirrors. The maintainer is also devilishly good looking.
+  - [devpi](https://pypi.org/project/devpi/): Can be ran and used to *proxy* packages locally when pip goes out to grab your dependencies.
+- Please ensure you're using the `-k` or `--venv` option to no recreate a virtualenv each run when debugging your tests!
 
 # Contact 💬
+
 To chat in real time, hit us up on IRC. Otherwise, GitHub issues are always welcome!
 
 IRC: `#pythontestrunner` on *FreeNode*
