@@ -16,6 +16,18 @@ By adding `ptr` configuration to your `setup.cfg` *(soon)* or `setup.py` you can
 - format code (via [black](https://pypi.org/project/black/))
 - perform static type analysis (via [mypy](http://mypy-lang.org/))
 
+
+## Quickstart
+- Install `ptr` into you virtualenv
+  - `pip install ptr`
+- Ensure your tests have a base file that can be executed directly
+  - i.e. `python3 test.py` (possibly using `unittest.main()`)
+- After adding `ptr_params` to setup.py (see example below), run:
+```
+cd repo
+ptr
+```
+
 ## How does `ptr` perform this magic? 🎩
 
 I'm glad you ask. Under the covers `ptr` performs:
@@ -28,7 +40,7 @@ I'm glad you ask. Under the covers `ptr` performs:
 
 ## Usage 🤓
 
-To use `ptr` all you need to do is cd or set the base dir via `-b` and run `pty`:
+To use `ptr` all you need to do is cd to your project or set the base dir via `-b` and execute:
 
     $ ptr [-dk] [-b some/path] [--venv /tmp/existing_venv]
 
@@ -87,7 +99,7 @@ ptr_params = {
     "test_suite_timeout": 300,
     # Relative path from setup.py to module (e.g. ptr == ptr.py)
     "required_coverage": {"ptr.py": 99, "TOTAL": 99},
-    # Run black or not
+    # Run `black --check` or not
     "run_black": False,
     # Run mypy or not
     "run_mypy": True,
