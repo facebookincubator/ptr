@@ -284,8 +284,12 @@ All done! 💥 💔 💥
   - [devpi](https://pypi.org/project/devpi/): Can be ran and used to *proxy* packages locally when pip goes out to grab your dependencies.
 - Please ensure you're using the `-k` or `--venv` option to no recreate a virtualenv each run when debugging your tests!
 
-# Contact 💬
+# Contact or join the ptr community 💬
 
 To chat in real time, hit us up on IRC. Otherwise, GitHub issues are always welcome!
-
 IRC: `#pythontestrunner` on *FreeNode*
+
+See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
+
+## License
+`ptr` is MIT licensed, as found in the LICENSE file.
