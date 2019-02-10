@@ -10,7 +10,7 @@ Python Test Runner (ptr) was born to run tests in an opinionated way, within arb
 - `ptr` requires `>=` **python 3.6**
 - `ptr` itself uses `ptr` to run its tests 👌🏼
 
-By adding `ptr` configuration to your `setup.cfg` *(soon)* or `setup.py` you can have `ptr` perform the following, per test suite, in parallel:
+By adding `ptr` configuration to your `setup.cfg` or `setup.py` you can have `ptr` perform the following, per test suite, in parallel:
 - run your test suite
 - check and enforce coverage requirements (via [coverage](https://pypi.org/project/coverage/)),
 - format code (via [black](https://pypi.org/project/black/))
@@ -33,7 +33,7 @@ ptr
 I'm glad you ask. Under the covers `ptr` performs:
 - Recursively searches for `setup.(cfg|py)` files from `BASE_DIR` (defaults to your "current working directory" (CWD))
    - [AST](https://docs.python.org/3/library/ast.html) parses out the config for each `setup.py` test requirements
-   - If a `setup.cfg` exists, load via configparser and prefer if a `[ptr]` section exists (*coming soon*)
+   - If a `setup.cfg` exists, load via configparser and prefer if a `[ptr]` section exists
 - Creates a [Python Virtual Environment](https://docs.python.org/3/tutorial/venv.html) (*OPTIONALLY* pointed at an internal PyPI mirror)
 - Runs `ATONCE` tests suites in parallel (i.e. per setup.(cfg|ptr))
 - All steps will be run for each suite and ONLY *FAILED* runs will have output written to stdout
@@ -108,11 +108,9 @@ ptr_params = {
 
 ### `setup.cfg`
 
-**Coming soon**
+This is per project in your repository and if exists is preferred over `setup.py`.
 
-This is per project in your repository.
-
-Please refer to [`setup.cfg.sample`](http://github.com/facebookincubator/ptr/blob/master/ptrconfig.sample) for the options available.
+Please refer to [`setup.cfg.sample`](http://github.com/facebookincubator/ptr/blob/master/ptrconfig.sample) for the options available + format.
 
 ### mypy Specifics
 
