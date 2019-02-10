@@ -232,6 +232,12 @@ def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict
 
     test_modules = {}  # type: Dict[Path, Dict]
     for setup_py in all_setup_pys:
+        # If a setup.cfg exists lets prefer it, if there is a [ptr] section
+        ptr_params = parse_setup_cfg(setup_py)
+        if ptr_params:
+            test_modules[setup_py] = ptr_params
+            continue
+
         with setup_py.open("r") as sp:
             setup_tree = ast.parse(sp.read())
 
@@ -564,6 +570,15 @@ async def create_venv(
     return venv_path
 
 
+def find_py_files(py_files: Set[str], base_dir: Path) -> None:
+    dirs = [d for d in base_dir.iterdir() if d.is_dir()]
+    py_files.update(
+        {str(x) for x in base_dir.iterdir() if x.is_file() and x.suffix == ".py"}
+    )
+    for directory in dirs:
+        find_py_files(py_files, directory)
+
+
 def find_setup_pys(
     base_path: Path, exclude_patterns: Set[str], follow_symlinks: bool = False
 ) -> Set[Path]:
@@ -591,6 +606,37 @@ def find_setup_pys(
     setup_pys = set()  # type: Set[Path]
     _recursive_find_files(setup_pys, base_path)
     return setup_pys
+
+
+def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
+    req_cov_key_strip = "required_coverage_"
+    ptr_params = {}  # type: Dict[str, Any]
+    setup_cfg = setup_py.parent / "setup.cfg"
+    if not setup_cfg.exists():
+        return ptr_params
+
+    cp = ConfigParser()
+    # Have configparser maintain key case - T484 error = callable
+    cp.optionxform = str  # type: ignore
+    cp.read(setup_cfg)
+    if "ptr" not in cp:
+        LOG.info("{} does not have a ptr section")
+        return ptr_params
+
+    # Create a setup.py like ptr_params to return
+    ptr_params["required_coverage"] = {}
+    for key, value in cp["ptr"].items():
+        if key.startswith(req_cov_key_strip):
+            key = key.strip(req_cov_key_strip)
+            ptr_params["required_coverage"][key] = int(value)
+        elif key.startswith("run_"):
+            ptr_params[key] = cp.getboolean("ptr", key)
+        elif key == "test_suite_timeout":
+            ptr_params[key] = cp.getint("ptr", key)
+        else:
+            ptr_params[key] = value
+
+    return ptr_params
 
 
 def print_test_results(
@@ -638,15 +684,6 @@ def print_test_results(
         print(fail_output)
 
     return stats
-
-
-def find_py_files(py_files: Set[str], base_dir: Path) -> None:
-    dirs = [d for d in base_dir.iterdir() if d.is_dir()]
-    py_files.update(
-        {str(x) for x in base_dir.iterdir() if x.is_file() and x.suffix == ".py"}
-    )
-    for directory in dirs:
-        find_py_files(py_files, directory)
 
 
 async def run_tests(

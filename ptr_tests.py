@@ -241,6 +241,18 @@ class TestPtr(unittest.TestCase):
         with self.assertRaises(SystemExit):
             ptr.main()
 
+    def test_parse_setup_cfg(self) -> None:
+        tmp_dir = Path(gettempdir())
+        setup_cfg = tmp_dir / "setup.cfg"
+        setup_py = tmp_dir / "setup.py"
+
+        with setup_cfg.open("w") as scp:
+            scp.write(ptr_tests_fixtures.SAMPLE_SETUP_CFG)
+
+        self.assertEqual(
+            ptr.parse_setup_cfg(setup_py), ptr_tests_fixtures.EXPECTED_TEST_PARAMS
+        )
+
     @patch("ptr.print")  # noqa
     def test_print_test_results(self, mock_print: Mock) -> None:
         stats = ptr.print_test_results(ptr_tests_fixtures.EXPECTED_COVERAGE_RESULTS)
