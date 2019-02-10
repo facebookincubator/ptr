@@ -418,15 +418,18 @@ async def _test_steps_runner(
     steps_ran = 0
     for a_step in steps:
         a_test_result = None
-        steps_ran += 1
         # Skip test if disabled & not asked for print coverage on analyze_coverage
-        if not a_step.run_condition and (
-            not print_cov and a_step.step_name is StepName.analyze_coverage
-        ):
-            LOG.info("Not running {} step".format(a_step.log_message))
-            continue
+        if not a_step.run_condition:
+            if (
+                a_step.step_name is not StepName.analyze_coverage
+                or not print_cov
+                and a_step.step_name is StepName.analyze_coverage
+            ):
+                LOG.info("Not running {} step".format(a_step.log_message))
+                continue
 
         LOG.info(a_step.log_message)
+        steps_ran += 1
         try:
             if a_step.cmds:
                 LOG.debug("CMD: {}".format(" ".join(a_step.cmds)))

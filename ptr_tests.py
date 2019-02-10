@@ -8,6 +8,7 @@
 import asyncio
 import unittest
 from collections import defaultdict
+from copy import deepcopy
 from pathlib import Path
 from platform import system
 from shutil import rmtree
@@ -314,8 +315,27 @@ class TestPtr(unittest.TestCase):
             fake_venv_path = td_path / "unittest_venv"
             fake_venv_lib_path = fake_venv_path / "lib"
             fake_venv_lib_path.mkdir(parents=True)
-            fake_tests_to_run = {fake_setup_py: ptr_tests_fixtures.EXPECTED_TEST_PARAMS}
 
+            # Run everything but black
+            etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
+            del (etp["run_black"])
+            fake_no_black_tests_to_run = {fake_setup_py: etp}
+            self.assertEqual(
+                self.loop.run_until_complete(
+                    ptr._test_steps_runner(
+                        69,
+                        fake_no_black_tests_to_run,
+                        fake_setup_py,
+                        fake_venv_path,
+                        {},
+                        True,
+                    )
+                ),
+                (None, 4),
+            )
+
+            # Run everything including black
+            fake_tests_to_run = {fake_setup_py: ptr_tests_fixtures.EXPECTED_TEST_PARAMS}
             self.assertEqual(
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(
