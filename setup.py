@@ -16,7 +16,7 @@ ptr_params = {
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
     # Relative path from setup.py to module (e.g. ptr == ptr.py)
-    "required_coverage": {"ptr.py": 84, "TOTAL": 90},
+    "required_coverage": {"ptr.py": 85, "TOTAL": 91},
     # Run black or not
     "run_black": True,
     # Run mypy or not

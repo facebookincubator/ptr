@@ -24,7 +24,7 @@ EXPECTED_TEST_PARAMS = {
     "entry_point_module": "ptr",
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
-    "required_coverage": {"ptr.py": 84, "TOTAL": 90},
+    "required_coverage": {"ptr.py": 85, "TOTAL": 91},
     "run_black": True,
     "run_mypy": True,
 }
@@ -146,6 +146,17 @@ setup(
     install_requires=["click", "tabulate"],
     test_suite=ptr_params["test_suite"],
 )
+"""
+
+SAMPLE_SETUP_CFG = """\
+[ptr]
+entry_point_module = ptr
+test_suite = ptr_tests
+test_suite_timeout = 120
+required_coverage_ptr.py = 85
+required_coverage_TOTAL = 91
+run_black = true
+run_mypy = true
 """
 
 SAMPLE_SETUP_PY_PTR = {
