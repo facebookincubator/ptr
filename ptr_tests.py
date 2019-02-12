@@ -9,6 +9,7 @@ import asyncio
 import unittest
 from collections import defaultdict
 from copy import deepcopy
+from os import environ
 from pathlib import Path
 from platform import system
 from shutil import rmtree
@@ -61,22 +62,27 @@ class TestPtr(unittest.TestCase):
     def test_analyze_coverage_errors(self, mock_path: Mock) -> None:
         mock_path.return_value = None
         fake_path = Path(gettempdir())
-        self.assertIsNone(ptr._analyze_coverage(fake_path, fake_path, {}, ""))
+        self.assertIsNone(ptr._analyze_coverage(fake_path, fake_path, {}, "", {}))
         mock_path.return_value = fake_path
         self.assertIsNone(
-            ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report")
+            ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report", {})
         )
 
     @patch("ptr.gettempdir", return_specific_tmp)  # noqa
     @patch("ptr.getpid", return_specific_pid)  # noqa
     def test_analyze_coverage(self) -> None:
         fake_setup_py = Path("unittest/setup.py")
-        fake_venv_path = self.loop.run_until_complete(
-            ptr.create_venv("https://pypi.com/s", install_pkgs=False)
-        )
-        self.assertIsNone(ptr._analyze_coverage(fake_venv_path, fake_setup_py, {}, ""))
+        if "VIRTUAL_ENV" in environ:
+            fake_venv_path = Path(environ["VIRTUAL_ENV"])
+        else:
+            fake_venv_path = self.loop.run_until_complete(
+                ptr.create_venv("https://pypi.com/s", install_pkgs=False)
+            )
         self.assertIsNone(
-            ptr._analyze_coverage(fake_venv_path, fake_setup_py, {"bla": 69}, "")
+            ptr._analyze_coverage(fake_venv_path, fake_setup_py, {}, "", {})
+        )
+        self.assertIsNone(
+            ptr._analyze_coverage(fake_venv_path, fake_setup_py, {"bla": 69}, "", {})
         )
 
         # Test with simple py_modules
@@ -86,6 +92,7 @@ class TestPtr(unittest.TestCase):
                 fake_setup_py,
                 ptr_tests_fixtures.FAKE_REQ_COVERAGE,
                 ptr_tests_fixtures.SAMPLE_REPORT_OUTPUT,
+                {},
             ),
             ptr_tests_fixtures.EXPECTED_COVERAGE_FAIL_RESULT,
         )
@@ -97,11 +104,14 @@ class TestPtr(unittest.TestCase):
                 fake_setup_py,
                 ptr_tests_fixtures.FAKE_TG_REQ_COVERAGE,
                 ptr_tests_fixtures.SAMPLE_TG_REPORT_OUTPUT,
+                {},
             ),
             ptr_tests_fixtures.EXPECTED_PTR_COVERAGE_FAIL_RESULT,
         )
 
-        rmtree(fake_venv_path)
+        # Dont delete the VIRTUAL_ENV carrying the test if we didn't make it
+        if "VIRTUAL_ENV" not in environ:
+            rmtree(fake_venv_path)
 
     @patch("ptr.run_tests", async_none)
     @patch("ptr._get_test_modules")
@@ -351,7 +361,13 @@ class TestPtr(unittest.TestCase):
             self.assertEqual(
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(
-                        69, fake_tests_to_run, fake_setup_py, fake_venv_path, {}, True
+                        69,
+                        fake_tests_to_run,
+                        fake_setup_py,
+                        fake_venv_path,
+                        {},
+                        {},
+                        True,
                     )
                 ),
                 (None, 5),
