@@ -8,6 +8,8 @@ pypi_url = https://pypi.org/simple/
 venv_pkgs =
   black
   coverage
+  flake8
   mypy
   pip
+  pylint
   setuptools

@@ -124,7 +124,7 @@ class TestPtr(unittest.TestCase):
         td = Path(__file__).parent
         sc = ptr._config_read(str(td), "ptrconfig.sample")
         self.assertEqual(sc["ptr"]["pypi_url"], expected_pypi_url)
-        self.assertEqual(len(sc["ptr"]["venv_pkgs"].split()), 5)
+        self.assertEqual(len(sc["ptr"]["venv_pkgs"].split()), 7)
 
     @patch("ptr._gen_check_output", async_none)  # noqa
     @patch("ptr._set_pip_mirror")  # noqa
@@ -198,6 +198,44 @@ class TestPtr(unittest.TestCase):
             self.assertEqual(
                 ptr._generate_mypy_cmd(td_path, mypy_exe, conf),
                 (str(mypy_exe), "--config", str(mypy_ini_path), str(entry_py_path)),
+            )
+
+    def test_generate_flake8_command(self) -> None:
+        flake8_exe = Path("/bin/flake8")
+        with TemporaryDirectory() as td:
+            module_dir = Path(td)
+            subdir = module_dir / "awlib"
+            subdir.mkdir()
+            cf = module_dir / ".flake8"
+            py2 = subdir / "awesome2.py"
+            py1 = module_dir / "awesome.py"
+            for afile in (cf, py1, py2):
+                afile.touch()
+
+            conf = {"run_flake8": True}
+
+            self.assertEqual(
+                ptr._generate_flake8_cmd(module_dir, flake8_exe, conf),
+                (str(flake8_exe), "--config", str(cf), str(py1), str(py2)),
+            )
+
+    def test_generate_pylint_command(self) -> None:
+        pylint_exe = Path("/bin/pylint")
+        with TemporaryDirectory() as td:
+            module_dir = Path(td)
+            subdir = module_dir / "awlib"
+            subdir.mkdir()
+            cf = module_dir / ".pylint"
+            py2 = subdir / "awesome2.py"
+            py1 = module_dir / "awesome.py"
+            for afile in (cf, py1, py2):
+                afile.touch()
+
+            conf = {"run_pylint": True}
+
+            self.assertEqual(
+                ptr._generate_pylint_cmd(module_dir, pylint_exe, conf),
+                (str(pylint_exe), "--rcfile", str(cf), str(py1), str(py2)),
             )
 
     def test_get_site_packages_path_error(self) -> None:
@@ -343,7 +381,7 @@ class TestPtr(unittest.TestCase):
                         True,
                     )
                 ),
-                (None, 4),
+                (None, 6),
             )
 
             # Run everything including black
@@ -354,7 +392,7 @@ class TestPtr(unittest.TestCase):
                         69, fake_tests_to_run, fake_setup_py, fake_venv_path, {}, True
                     )
                 ),
-                (None, 5),
+                (None, 7),
             )
             # Ensure we've "printed coverage"
             self.assertTrue(mock_print.called)

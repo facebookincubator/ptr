@@ -27,6 +27,8 @@ EXPECTED_TEST_PARAMS = {
     "required_coverage": {"ptr.py": 85, "TOTAL": 91},
     "run_black": True,
     "run_mypy": True,
+    "run_flake8": True,
+    "run_pylint": True,
 }
 
 EXPECTED_COVERAGE_FAIL_RESULT = test_result(
@@ -157,6 +159,8 @@ required_coverage_ptr.py = 85
 required_coverage_TOTAL = 91
 run_black = true
 run_mypy = true
+run_flake8 = true
+run_pylint = true
 """
 
 SAMPLE_SETUP_PY_PTR = {
