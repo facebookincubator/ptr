@@ -368,7 +368,7 @@ class TestPtr(unittest.TestCase):
 
             # Run everything but black
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
-            del (etp["run_black"])
+            del etp["run_black"]
             fake_no_black_tests_to_run = {fake_setup_py: etp}
             self.assertEqual(
                 self.loop.run_until_complete(

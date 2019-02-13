@@ -489,7 +489,7 @@ async def _test_steps_runner(
         try:
             if a_step.cmds:
                 LOG.debug("CMD: {}".format(" ".join(a_step.cmds)))
-                stdout, stderr = await _gen_check_output(
+                stdout, _stderr = await _gen_check_output(
                     a_step.cmds, a_step.timeout, env=env
                 )
             else:
