@@ -102,6 +102,7 @@ def _analyze_coverage(
     setup_py_path: Path,
     required_cov: Dict[str, int],
     coverage_report: str,
+    stats: Dict[str, int],
 ) -> Optional[test_result]:
     module_path = setup_py_path.parent
     site_packages_path = _get_site_packages_path(venv_path)
@@ -155,6 +156,15 @@ def _analyze_coverage(
                 int(sl[1]), int(sl[2]), int(sl[3][:-1]), sl[4]
             )
 
+        if sl[0] != "TOTAL":
+            stats[
+                "suite.{}_coverage.file.{}".format(module_path.name, module_path_str)
+            ] = coverage_lines[module_path_str].cover
+        else:
+            stats["suite.{}_coverage.total".format(module_path.name)] = coverage_lines[
+                module_path_str
+            ].cover
+
     failed_output = "The following files did not meet coverage requirements:\n"
     failed_coverage = False
     for afile, cov_req in required_cov.items():
@@ -176,8 +186,11 @@ def _analyze_coverage(
 
 
 def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
+    stats_file_path = Path(stats_file)
+    if not stats_file_path.is_absolute():
+        stats_file_path = Path(CWD) / stats_file_path
     try:
-        with open(stats_file, "w") as sfp:
+        with stats_file_path.open("w") as sfp:
             dump(stats, sfp, indent=2, sort_keys=True)
     except OSError as ose:
         LOG.exception(
@@ -366,6 +379,7 @@ async def _test_steps_runner(
     setup_py_path: Path,
     venv_path: Path,
     env: Dict,
+    stats: Dict[str, int],
     print_cov: bool = False,
 ) -> Tuple[Optional[test_result], int]:
     black_exe = venv_path / "bin" / "black"
@@ -479,7 +493,11 @@ async def _test_steps_runner(
 
             if a_step.run_condition:
                 a_test_result = _analyze_coverage(
-                    venv_path, setup_py_path, config["required_coverage"], cov_report
+                    venv_path,
+                    setup_py_path,
+                    config["required_coverage"],
+                    cov_report,
+                    stats,
                 )
 
         # If we've had a failure return
@@ -520,7 +538,13 @@ async def _test_runner(
 
         test_run_start_time = int(time())
         test_fail_result, steps_ran = await _test_steps_runner(
-            test_run_start_time, tests_to_run, setup_py_path, venv_path, env, print_cov
+            test_run_start_time,
+            tests_to_run,
+            setup_py_path,
+            venv_path,
+            env,
+            stats,
+            print_cov,
         )
         total_success_runtime = int(time() - test_run_start_time)
         if test_fail_result:

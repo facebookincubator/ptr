@@ -40,6 +40,10 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         print("We didn't test all setup.py files ...", file=stderr)
         stats_errors += 1
 
+    if "suite.ptr_coverage.file.ptr.py" not in stats_json:
+        print("We didn't get any coverage stats for ptr.py", file=stderr)
+        stats_errors += 1
+
     print("Stats check found {} errors".format(stats_errors))
     return stats_errors
 
@@ -47,6 +51,7 @@ def check_ptr_stats_json(stats_file: Path) -> int:
 def integration_test() -> int:
     # TODO: Plumb up to a coverage system - e.g. codecov (Issue #6)
     print("Running `ptr` integration tests (aka run itself)", file=stderr)
+
     stats_file = Path(gettempdir()) / "ptr_ci_stats"
     cp = run(
         (
