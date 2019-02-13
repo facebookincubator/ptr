@@ -53,6 +53,12 @@ def return_specific_tmp(*args: Any, **kwargs: Any) -> str:
     return "/tmp"
 
 
+def touch_files(*paths: Path) -> None:
+    for path in paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch(exist_ok=True)
+
+
 class TestPtr(unittest.TestCase):
     def setUp(self) -> None:
         self.loop = asyncio.get_event_loop()
@@ -146,10 +152,7 @@ class TestPtr(unittest.TestCase):
             build_path = td_path / "build-arm"
             cooper_path = td_path / "cooper"
 
-            for adir in {build_path, cooper_path}:
-                adir.mkdir()
-                a_setup_py = adir / "setup.py"
-                a_setup_py.touch()
+            touch_files(*(adir / "setup.py" for adir in {build_path, cooper_path}))
 
             setup_pys = ptr.find_setup_pys(td_path, {"build*"})
             self.assertEqual(len(setup_pys), 1)
@@ -162,11 +165,9 @@ class TestPtr(unittest.TestCase):
         with TemporaryDirectory() as td:
             module_dir = Path(td)
             subdir = module_dir / "awlib"
-            subdir.mkdir()
             py2 = subdir / "awesome2.py"
             py1 = module_dir / "awesome.py"
-            for afile in (py1, py2):
-                afile.touch()
+            touch_files(py1, py2)
 
             self.assertEqual(
                 ptr._generate_black_cmd(module_dir, black_exe),
@@ -188,8 +189,7 @@ class TestPtr(unittest.TestCase):
             mypy_exe = Path("mypy")
             mypy_ini_path = td_path / "mypy.ini"
             entry_py_path = td_path / "cooper_is_awesome.py"
-            for a_path in (mypy_ini_path, entry_py_path):
-                a_path.touch()
+            touch_files(mypy_ini_path, entry_py_path)
 
             conf = {
                 "run_mypy": True,
@@ -205,12 +205,10 @@ class TestPtr(unittest.TestCase):
         with TemporaryDirectory() as td:
             module_dir = Path(td)
             subdir = module_dir / "awlib"
-            subdir.mkdir()
             cf = module_dir / ".flake8"
             py2 = subdir / "awesome2.py"
             py1 = module_dir / "awesome.py"
-            for afile in (cf, py1, py2):
-                afile.touch()
+            touch_files(cf, py1, py2)
 
             conf = {"run_flake8": True}
 
@@ -224,12 +222,10 @@ class TestPtr(unittest.TestCase):
         with TemporaryDirectory() as td:
             module_dir = Path(td)
             subdir = module_dir / "awlib"
-            subdir.mkdir()
             cf = module_dir / ".pylint"
             py2 = subdir / "awesome2.py"
             py1 = module_dir / "awesome.py"
-            for afile in (cf, py1, py2):
-                afile.touch()
+            touch_files(cf, py1, py2)
 
             conf = {"run_pylint": True}
 

@@ -23,7 +23,7 @@ ptr_params = {
     "run_mypy": True,
     # Run flake8 or not
     "run_flake8": True,
-    # Run flake8 or not
+    # Run pylint or not
     "run_pylint": True,
 }
 
