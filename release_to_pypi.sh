@@ -41,7 +41,7 @@ done
 echo -n "Upload to PyPI? (ctrl + c to cancel): "
 read keep_going
 
-for pkg_glob in "ptr*.whl" "ptr*.tgz"
+for pkg_glob in "ptr*.whl" "ptr*.tar.gz"
 do
-  echo "$VENV_DIR/bin/twine" upload "dist/$pkg_glob"
+  "$VENV_DIR/bin/twine" upload "dist/$pkg_glob"
 done
