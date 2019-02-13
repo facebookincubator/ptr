@@ -595,7 +595,7 @@ async def create_venv(
 
 
 def find_py_files(py_files: Set[str], base_dir: Path) -> None:
-    dirs = [d for d in base_dir.iterdir() if d.is_dir()]
+    dirs = [d for d in base_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
     py_files.update(
         {str(x) for x in base_dir.iterdir() if x.is_file() and x.suffix == ".py"}
     )
