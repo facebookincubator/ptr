@@ -2,6 +2,14 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.2.12
+Codename: **Forbes**
+
+*[Forbes, NSW, Australia](https://en.wikipedia.org/wiki/Forbes,_New_South_Wales) is the home of @aijayadams 👨🏻‍🦰🇦🇺*
+
+- Added suite file coverage % to statistics JSON file - Issue: #16 - *Thanks @aijayadams*
+- Ignore hidden '.' (dot) directories when running black - PR: #19 - *Thanks @jreese*
+
 ### 2019.2.10
 Codename: **Carnival**
 
