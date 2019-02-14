@@ -27,6 +27,9 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         print("Stats JSON Error: {}".format(jde))
         return 69
 
+    # Lets always print JSON to help debug any failures and have JSON history
+    print(json.dumps(stats_json, indent=2, sort_keys=True))
+
     any_fail = int(stats_json["total.fails"]) + int(stats_json["total.timeouts"])
     if any_fail:
         print("Stats report {} fails/timeouts".format(any_fail), file=stderr)
@@ -44,7 +47,8 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         print("We didn't get any coverage stats for ptr.py", file=stderr)
         stats_errors += 1
 
-    print("Stats check found {} errors".format(stats_errors))
+    print("Stats check found {} error(s)".format(stats_errors))
+
     return stats_errors
 
 
