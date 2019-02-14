@@ -43,8 +43,13 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         print("We didn't test all setup.py files ...", file=stderr)
         stats_errors += 1
 
-    if "suite.ptr_coverage.file.ptr.py" not in stats_json:
-        print("We didn't get any coverage stats for ptr.py", file=stderr)
+    # TODO: Make getting project name better - For now quick CI hack
+    coverage_key_count = 0
+    for key in stats_json.keys():
+        if "_coverage." in key:
+            coverage_key_count += 1
+    if coverage_key_count != 4:
+        print("We didn't get coverage stats for all ptr files + total", file=stderr)
         stats_errors += 1
 
     print("Stats check found {} error(s)".format(stats_errors))
