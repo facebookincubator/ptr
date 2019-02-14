@@ -9,6 +9,7 @@ import argparse
 import ast
 import asyncio
 import logging
+import re
 import sys
 from collections import defaultdict, namedtuple
 from configparser import ConfigParser
@@ -17,7 +18,7 @@ from json import dump
 from os import chdir, cpu_count, environ, getcwd, getpid
 from os.path import sep as path_separator
 from pathlib import Path
-from shutil import rmtree
+from shutil import copytree, copy, rmtree
 from subprocess import CalledProcessError
 from tempfile import gettempdir
 from time import time
@@ -310,6 +311,39 @@ def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict
     return test_modules
 
 
+def _prep_test_modules(venv_path: Path, parent_path: Path, config: Dict) -> None:
+    """Copy the test suite (and all test_suite_extras) to the virtualenv"""
+    test_suite = config["test_suite"]
+    test_suite_extras = config.get("test_suite_extras", "")
+    if isinstance(test_suite_extras, str):
+        test_suite_extras = re.split(r"[,\s\n]+", test_suite_extras)
+
+    items = [test_suite] + [t for t in test_suite_extras if t]
+    for item in items:
+        dest = None
+        for item_path in (
+            item,
+            item.replace(".", path_separator),
+            item.replace(".", path_separator) + ".py",
+        ):
+            src = parent_path / item_path
+            if src.exists():
+                dest = venv_path / item_path
+                break
+
+        if not dest:
+            LOG.warning("test suite item {} could not be found, skipping".format(item))
+            continue
+
+        if src.is_dir():
+            LOG.debug("copying tree {} to {} for test suite".format(src, dest))
+            copytree(src, dest, symlinks=True)
+        elif src.is_file():
+            LOG.debug("copying file {} to {} for test suite".format(src, dest))
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            copy(src, dest)
+
+
 def _handle_debug(debug: bool) -> bool:
     """Turn on debugging if asked otherwise INFO default"""
     log_level = logging.DEBUG if debug else logging.INFO
@@ -425,9 +459,7 @@ async def _test_steps_runner(
     config = tests_to_run[setup_py_path]
     setup_py_parent_path = setup_py_path.parent
     # For running unit tests via coverage in the venv
-    test_entry_point = setup_py_parent_path / "{}.py".format(
-        config["test_suite"].replace(".", path_separator)
-    )
+    _prep_test_modules(venv_path, setup_py_parent_path, config)
 
     steps = (
         step(
@@ -440,8 +472,8 @@ async def _test_steps_runner(
         step(
             StepName.tests_run,
             True,
-            (str(coverage_exe), "run", str(test_entry_point)),
-            "Running {} tests via coverage".format(test_entry_point),
+            (str(coverage_exe), "run", "-m", config["test_suite"]),
+            "Running {} tests via coverage".format(config["test_suite"]),
             config["test_suite_timeout"],
         ),
         step(

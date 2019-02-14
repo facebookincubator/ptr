@@ -22,7 +22,7 @@ from typing import (  # noqa: F401 # pylint: disable=unused-import
     Optional,
     Tuple,
 )
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 
 import ptr
 import ptr_tests_fixtures
@@ -267,6 +267,49 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(stats["total.setup_pys"], 1)
         self.assertEqual(stats["total.ptr_setup_pys"], 1)
 
+    @patch("ptr.copy")
+    @patch("ptr.copytree")
+    def test_prep_test_modules(self, copytree_mock: Mock, copy_mock: Mock) -> None:
+        with TemporaryDirectory() as td:
+            src_dir = Path(td) / "src"
+            dest_dir = Path(td) / "dest"
+
+            awesome = src_dir / "awlib" / "awesome.py"
+            testlib = src_dir / "tests" / "test_awlib.py"
+            tester = src_dir / "tester.py"
+            test_data = src_dir / "test_data.json"
+            touch_files(awesome, testlib, tester, test_data)
+
+            config = {"test_suite": "tester"}
+            ptr._prep_test_modules(dest_dir, src_dir, config)
+            copy_mock.assert_called_once_with(tester, dest_dir / "tester.py")
+            copytree_mock.assert_not_called()
+            copy_mock.reset_mock()
+
+            config = {"test_suite": "tests"}
+            ptr._prep_test_modules(dest_dir, src_dir, config)
+            copy_mock.assert_not_called()
+            copytree_mock.assert_called_once_with(
+                src_dir / "tests", dest_dir / "tests", symlinks=True
+            )
+            copytree_mock.reset_mock()
+
+            config = {
+                "test_suite": "tests",
+                "test_suite_extras": ["test_data.json", "tester"],
+            }
+            ptr._prep_test_modules(dest_dir, src_dir, config)
+            copy_mock.assert_has_calls(
+                [
+                    call(test_data, dest_dir / "test_data.json"),
+                    call(tester, dest_dir / "tester.py"),
+                ]
+            )
+            copytree_mock.assert_called_once_with(
+                src_dir / "tests", dest_dir / "tests", symlinks=True
+            )
+            copytree_mock.reset_mock()
+
     def test_gen_output(self) -> None:
         stdout, stderr = self.loop.run_until_complete(
             ptr._gen_check_output(("/bin/echo",))
@@ -299,9 +342,10 @@ class TestPtr(unittest.TestCase):
         with setup_cfg.open("w") as scp:
             scp.write(ptr_tests_fixtures.SAMPLE_SETUP_CFG)
 
-        self.assertEqual(
-            ptr.parse_setup_cfg(setup_py), ptr_tests_fixtures.EXPECTED_TEST_PARAMS
-        )
+        expected = ptr_tests_fixtures.EXPECTED_TEST_PARAMS.copy()
+        expected["test_suite_extras"] = " ".join(expected["test_suite_extras"])
+
+        self.assertEqual(ptr.parse_setup_cfg(setup_py), expected)
 
     @patch("ptr.print")  # noqa
     def test_print_test_results(self, mock_print: Mock) -> None:

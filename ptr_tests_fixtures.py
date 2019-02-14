@@ -24,6 +24,7 @@ class FakeEventLoop:
 EXPECTED_TEST_PARAMS = {
     "entry_point_module": "ptr",
     "test_suite": "ptr_tests",
+    "test_suite_extras": ["ptr_tests_fixtures.py", "setup.py", "ptrconfig.sample"],
     "test_suite_timeout": 120,
     "required_coverage": {"ptr.py": 85, "TOTAL": 90},
     "run_black": True,
@@ -162,6 +163,7 @@ SAMPLE_SETUP_CFG = """\
 [ptr]
 entry_point_module = ptr
 test_suite = ptr_tests
+test_suite_extras = ptr_tests_fixtures.py setup.py ptrconfig.sample
 test_suite_timeout = 120
 required_coverage_ptr.py = 85
 required_coverage_TOTAL = 90
