@@ -14,7 +14,13 @@ from platform import system
 from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory, gettempdir
-from typing import Any, Dict, List, Optional, Tuple  # noqa: F401
+from typing import (  # noqa: F401 # pylint: disable=unused-import
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+)
 from unittest.mock import Mock, patch
 
 import ptr
