@@ -72,6 +72,8 @@ class StepName(Enum):
     analyze_coverage = 3
     mypy_run = 4
     black_run = 5
+    pylint_run = 6
+    flake8_run = 7
 
 
 coverage_line = namedtuple("coverage_line", ["stmts", "miss", "cover", "missing"])
@@ -220,7 +222,7 @@ def _generate_install_cmd(
 def _generate_mypy_cmd(
     module_dir: Path, mypy_exe: Path, config: Dict
 ) -> Tuple[str, ...]:
-    if config["run_mypy"]:
+    if config.get("run_mypy", False):
         mypy_entry_point = module_dir / "{}.py".format(config["entry_point_module"])
     else:
         return ()
@@ -231,6 +233,38 @@ def _generate_mypy_cmd(
         cmds.extend(["--config", str(mypy_ini_path)])
     cmds.append(str(mypy_entry_point))
     return tuple(cmds)
+
+
+def _generate_flake8_cmd(
+    module_dir: Path, flake8_exe: Path, config: Dict
+) -> Tuple[str, ...]:
+    if not config.get("run_flake8", False):
+        return ()
+
+    py_files = set()  # type: Set[str]
+    find_py_files(py_files, module_dir)
+
+    cmds = [str(flake8_exe)]
+    flake8_config = module_dir / ".flake8"
+    if flake8_config.exists():
+        cmds.extend(["--config", str(flake8_config)])
+    return (*cmds, *sorted(py_files))
+
+
+def _generate_pylint_cmd(
+    module_dir: Path, pylint_exe: Path, config: Dict
+) -> Tuple[str, ...]:
+    if not config.get("run_pylint", False):
+        return ()
+
+    py_files = set()  # type: Set[str]
+    find_py_files(py_files, module_dir)
+
+    cmds = [str(pylint_exe)]
+    pylint_config = module_dir / ".pylint"
+    if pylint_config.exists():
+        cmds.extend(["--rcfile", str(pylint_config)])
+    return (*cmds, *sorted(py_files))
 
 
 def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict]:
@@ -384,8 +418,10 @@ async def _test_steps_runner(
 ) -> Tuple[Optional[test_result], int]:
     black_exe = venv_path / "bin" / "black"
     coverage_exe = venv_path / "bin" / "coverage"
+    flake8_exe = venv_path / "bin" / "flake8"
     mypy_exe = venv_path / "bin" / "mypy"
     pip_exe = venv_path / "bin" / "pip"
+    pylint_exe = venv_path / "bin" / "pylint"
     config = tests_to_run[setup_py_path]
     setup_py_parent_path = setup_py_path.parent
     # For running unit tests via coverage in the venv
@@ -433,6 +469,20 @@ async def _test_steps_runner(
             "Running black for {}".format(setup_py_path),
             config["test_suite_timeout"],
         ),
+        step(
+            StepName.flake8_run,
+            bool("run_flake8" in config and config["run_flake8"]),
+            _generate_flake8_cmd(setup_py_path.parent, flake8_exe, config),
+            "Running flake8 for {}".format(setup_py_path),
+            config["test_suite_timeout"],
+        ),
+        step(
+            StepName.pylint_run,
+            bool("run_pylint" in config and config["run_pylint"]),
+            _generate_pylint_cmd(setup_py_path.parent, pylint_exe, config),
+            "Running pylint for {}".format(setup_py_path),
+            config["test_suite_timeout"],
+        ),
     )
 
     steps_ran = 0
@@ -453,13 +503,17 @@ async def _test_steps_runner(
         try:
             if a_step.cmds:
                 LOG.debug("CMD: {}".format(" ".join(a_step.cmds)))
-                stdout, stderr = await _gen_check_output(
+                stdout, _stderr = await _gen_check_output(
                     a_step.cmds, a_step.timeout, env=env
                 )
             else:
                 LOG.debug("Skipping running a cmd for {} step".format(a_step))
         except CalledProcessError as cpe:
-            if a_step.step_name in {StepName.mypy_run}:
+            if a_step.step_name in {
+                StepName.mypy_run,
+                StepName.flake8_run,
+                StepName.pylint_run,
+            }:
                 err_output = cpe.stdout.decode("utf-8")
             else:
                 err_output = cpe.stderr.decode("utf-8")

@@ -14,7 +14,7 @@ import json
 from os import environ
 from pathlib import Path
 from subprocess import PIPE, run
-from sys import exit, stderr
+from sys import stderr
 from tempfile import gettempdir
 
 

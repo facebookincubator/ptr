@@ -14,10 +14,10 @@ from ptr import test_result
 
 
 class FakeEventLoop:
-    def close(*args, **kwargs) -> None:
-        ...
+    def close(self, *args, **kwargs) -> None:
+        pass
 
-    def run_until_complete(*args, **kwargs) -> int:
+    def run_until_complete(self, *args, **kwargs) -> int:
         return 0
 
 
@@ -28,6 +28,8 @@ EXPECTED_TEST_PARAMS = {
     "required_coverage": {"ptr.py": 85, "TOTAL": 90},
     "run_black": True,
     "run_mypy": True,
+    "run_flake8": True,
+    "run_pylint": True,
 }
 
 EXPECTED_COVERAGE_FAIL_RESULT = test_result(
@@ -43,7 +45,11 @@ EXPECTED_COVERAGE_FAIL_RESULT = test_result(
 EXPECTED_PTR_COVERAGE_FAIL_RESULT = test_result(
     setup_py_path=Path("unittest/setup.py"),
     returncode=3,
-    output="The following files did not meet coverage requirements:\n  tg/tg.py: 22 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  TOTAL: 40 < 99 - Missing: \n",
+    output=(
+        "The following files did not meet coverage requirements:\n  tg/tg.py: "
+        "22 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  "
+        "TOTAL: 40 < 99 - Missing: \n"
+    ),
     runtime=0,
     timeout=False,
 )
@@ -161,6 +167,8 @@ required_coverage_ptr.py = 85
 required_coverage_TOTAL = 90
 run_black = true
 run_mypy = true
+run_flake8 = true
+run_pylint = true
 """
 
 SAMPLE_SETUP_PY_PTR = {
