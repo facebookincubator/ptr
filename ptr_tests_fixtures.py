@@ -10,7 +10,7 @@ from os import environ
 from pathlib import Path
 from sys import version_info
 
-from ptr import test_result
+from ptr import WINDOWS, test_result
 
 
 class FakeEventLoop:
@@ -32,12 +32,15 @@ EXPECTED_TEST_PARAMS = {
     "run_pylint": True,
 }
 
+COV_PATH_SEP = "\\" if WINDOWS else "/"
 EXPECTED_COVERAGE_FAIL_RESULT = test_result(
     setup_py_path=Path("unittest/setup.py"),
     returncode=3,
     output=(
         "The following files did not meet coverage requirements:\n"
-        + "  unittest/ptr.py: 69 < 99 - Missing: 70-72, 76-94, 98\n"
+        + "  unittest{}ptr.py: 69 < 99 - Missing: 70-72, 76-94, 98\n".format(
+            COV_PATH_SEP
+        )
     ),
     runtime=0,
     timeout=False,
@@ -46,9 +49,11 @@ EXPECTED_PTR_COVERAGE_FAIL_RESULT = test_result(
     setup_py_path=Path("unittest/setup.py"),
     returncode=3,
     output=(
-        "The following files did not meet coverage requirements:\n  tg/tg.py: "
-        "22 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  "
-        "TOTAL: 40 < 99 - Missing: \n"
+        "The following files did not meet coverage requirements:\n  tg{}tg.py: ".format(
+            COV_PATH_SEP
+        )
+        + "22 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  "
+        + "TOTAL: 40 < 99 - Missing: \n"
     ),
     runtime=0,
     timeout=False,
@@ -78,8 +83,8 @@ EXPECTED_COVERAGE_RESULTS = [
     ),
 ]
 
-FAKE_REQ_COVERAGE = {"unittest/ptr.py": 99, "TOTAL": 99}
-FAKE_TG_REQ_COVERAGE = {"tg/tg.py": 99, "TOTAL": 99}
+FAKE_REQ_COVERAGE = {str(Path("unittest/ptr.py")): 99, "TOTAL": 99}
+FAKE_TG_REQ_COVERAGE = {str(Path("tg/tg.py")): 99, "TOTAL": 99}
 
 
 SAMPLE_REPORT_OUTPUT = """\
@@ -92,10 +97,13 @@ unittest/ptr_venv_fixtures.py        1      0     100%
 TOTAL                                84     14    99%
 """
 
-BASE_VENV_PATH = (
-    environ["VIRTUAL_ENV"] if "VIRTUAL_ENV" in environ else "/tmp/ptr_venv_2580217"
+HARD_SET_VENV = (
+    Path("C:\\tmp\\ptr_venv_2580217") if WINDOWS else Path("/tmp/ptr_venv_2580217")
 )
-SAMPLE_TG_REPORT_OUTPUT = """\
+BASE_VENV_PATH = (
+    Path(environ["VIRTUAL_ENV"]) if "VIRTUAL_ENV" in environ else HARD_SET_VENV
+)
+SAMPLE_NIX_TG_REPORT_OUTPUT = """\
 Name                                                                         Stmts   Miss  Cover   Missing
 ----------------------------------------------------------------------------------------------------------
 {base_venv_path}/lib/python{major}.{minor}/site-packages/click/__init__.py             13      0   100%
@@ -124,7 +132,28 @@ Name                                                                         Stm
 ----------------------------------------------------------------------------------------------------------
 TOTAL                                                                         3982   2391    40%
 """.format(
-    base_venv_path=BASE_VENV_PATH, major=version_info.major, minor=version_info.minor
+    base_venv_path=str(BASE_VENV_PATH),
+    major=version_info.major,
+    minor=version_info.minor,
+)
+
+SAMPLE_WIN_TG_REPORT_OUTPUT = """\
+Name                                                                         Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------------------------------
+C:\\temp\\tp\\Lib\\site-packages\\click\\testing.py              207     86    58%   19, 28-29, 32, 35-36, 39, 42, 45, 48, 51, 57-62, 66-67, 69, 94, 99, 105-107, 112, 159, 191-197, 201, 206-207, 216-220, 223-225, 228-232, 239, 253-260, 264-270, 318, 331, 334, 337-346, 364-374
+C:\\temp\\tp\\Lib\\site-packages\\click\\types.py                207     86    58%   19, 28-29, 32, 35-36, 39, 42, 45, 48, 51, 57-62, 66-67
+{base_venv_path}\\Lib\\site-packages\\tg\\__init__.py            0      0   100%
+{base_venv_path}\\Lib\\site-packages\\tg\\commands\\__init__.py  0      0   100%
+{base_venv_path}\\Lib\\site-packages\\tg\\commands\\base.py      228    173    24%   33, 39, 43, 61-64, 69-72, 77-81, 87-117, 121-124, 129-132, 135-148, 155-188, 193-219, 222-237, 244-279, 282-293, 296-305, 308-317, 320-331, 334-343, 347-360, 363-388, 391-415, 418-431, 434-436, 439-441
+{base_venv_path}\\Lib\\site-packages\\tg\\commands\\consts.py    20      0   100%
+{base_venv_path}\\Lib\\site-packages\\tg\\commands\\zeroize.py   45      1    98%   24
+{base_venv_path}\\Lib\\site-packages\\tg\\tests\\base.py         26      0   100%
+{base_venv_path}\\Lib\\site-packages\\tg\\tests\\test_zeroize.py 29      1    97%   44
+{base_venv_path}\\Lib\\site-packages\\tg\\tg.py                  116     90    22%   39-59, 62-73, 121, 145-149, 153-225, 231-234, 238
+----------------------------------------------------------------------------------------------------------
+TOTAL                                                    3982   2391    40%
+""".format(
+    base_venv_path=str(BASE_VENV_PATH)
 )
 
 SAMPLE_SETUP_PY = """\

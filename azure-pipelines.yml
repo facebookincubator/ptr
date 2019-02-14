@@ -21,6 +21,18 @@ jobs:
         python.version: '3.7'
         ci.env: 'PTR_INTEGRATION'
 
+- job: 'Testing_ptr_Windows'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python36:
+        python.version: '3.6'
+        ci.env: 'py36'
+      Python37:
+        python.version: '3.7'
+        ci.env: 'py37'
+
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -30,5 +42,7 @@ jobs:
   - script: python -m pip install -r requirements.txt
     displayName: 'Install ptr dependencies'
 
-  - script: export $(ci.env)=1 ; python ci.py
+  - script: python ci.py
+    env:
+        $(ci.env): '1'
     displayName: 'Running CI for $(ci.env)'

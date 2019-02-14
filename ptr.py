@@ -15,7 +15,9 @@ from configparser import ConfigParser
 from enum import Enum
 from json import dump
 from os import chdir, cpu_count, environ, getcwd, getpid
+from os.path import sep
 from pathlib import Path
+from platform import system
 from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import gettempdir
@@ -24,6 +26,12 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Un
 
 
 LOG = logging.getLogger(__name__)
+MAC = system() == "Darwin"
+WINDOWS = system() == "Windows"
+# Windows needs to use a ProactorEventLoop for subprocesses
+# TODO: Workout how to make mypy happy with this on non Windows platforms
+if WINDOWS:
+    asyncio.set_event_loop(asyncio.ProactorEventLoop())  # type: ignore
 
 
 def _config_default() -> ConfigParser:
@@ -40,8 +48,8 @@ def _config_default() -> ConfigParser:
 def _config_read(cwd: str, conf_name: str = ".ptrconfig") -> Optional[ConfigParser]:
     """ Look from cwd to / for a "conf_name" file - If so read it in """
     cp = None
-    cwd_path = Path(cwd)  # type: Optional[Path]
-    root_path = Path("/")
+    cwd_path = Path(cwd)  # type: Path
+    root_path = Path("{}\\".format(cwd_path.drive)) if WINDOWS else Path("/")
 
     while cwd_path:
         ptrconfig_path = cwd_path / conf_name
@@ -52,7 +60,10 @@ def _config_read(cwd: str, conf_name: str = ".ptrconfig") -> Optional[ConfigPars
             LOG.info("Loading found config @ {}".format(ptrconfig_path))
             break
 
-        cwd_path = None if cwd_path == root_path else cwd_path.parent
+        if cwd_path == root_path:
+            break
+
+        cwd_path = cwd_path.parent
 
     return cp
 
@@ -85,17 +96,15 @@ test_result = namedtuple(
 
 
 def _get_site_packages_path(venv_path: Path) -> Optional[Path]:
-    lib_path = venv_path / "lib"
-    py_dir = None
+    lib_path = venv_path / ("Lib" if WINDOWS else "lib")
     for apath in lib_path.iterdir():
         if apath.is_dir() and apath.match("python*"):
-            py_dir = apath
-            break
-    if not py_dir:
-        LOG.error("Unable to find a python lib dir in {}".format(lib_path))
-        return None
+            return apath / "site-packages"
+        if apath.is_dir() and apath.name == "site-packages":
+            return apath
 
-    return py_dir / "site-packages"
+    LOG.error("Unable to find a python lib dir in {}".format(lib_path))
+    return None
 
 
 def _analyze_coverage(
@@ -108,8 +117,9 @@ def _analyze_coverage(
     module_path = setup_py_path.parent
     site_packages_path = _get_site_packages_path(venv_path)
     if not site_packages_path:
+        LOG.error("Analyze coverage is unable to find site-packages path")
         return None
-    relative_site_packages = str(site_packages_path.relative_to(venv_path)) + "/"
+    relative_site_packages = str(site_packages_path.relative_to(venv_path)) + sep
 
     if not coverage_report:
         LOG.error(
@@ -123,7 +133,7 @@ def _analyze_coverage(
         return None
 
     coverage_lines = {}
-    for line in coverage_report.split("\n"):
+    for line in coverage_report.splitlines():
         if not line or line.startswith("-") or line.startswith("Name"):
             continue
 
@@ -183,6 +193,7 @@ def _analyze_coverage(
         return test_result(
             setup_py_path, StepName.analyze_coverage.value, failed_output, 0, False
         )
+
     return None
 
 
@@ -377,7 +388,10 @@ async def _progress_reporter(
 
 def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
     build_environ = environ.copy()
-    if not build_base_path:
+    if not build_base_path or not build_base_path.exists():
+        LOG.error(
+            "Configured local build env path {} does not exist".format(build_base_path)
+        )
         return build_environ
 
     if build_base_path.exists():

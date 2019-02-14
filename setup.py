@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# coding=utf8
 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -32,7 +33,7 @@ def get_long_desc() -> str:
     repo_base = Path(__file__).parent
     long_desc = ""
     for info_file in (repo_base / "README.md", repo_base / "CHANGES.md"):
-        with info_file.open("r") as ifp:
+        with info_file.open("r", encoding="utf8") as ifp:
             long_desc += ifp.read()
         long_desc += "\n\n"
 
