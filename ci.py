@@ -27,6 +27,9 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         print("Stats JSON Error: {}".format(jde))
         return 69
 
+    # Lets always print JSON to help debug any failures and have JSON history
+    print(json.dumps(stats_json, indent=2, sort_keys=True))
+
     any_fail = int(stats_json["total.fails"]) + int(stats_json["total.timeouts"])
     if any_fail:
         print("Stats report {} fails/timeouts".format(any_fail), file=stderr)
@@ -40,11 +43,17 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         print("We didn't test all setup.py files ...", file=stderr)
         stats_errors += 1
 
-    if "suite.ptr_coverage.file.ptr.py" not in stats_json:
-        print("We didn't get any coverage stats for ptr.py", file=stderr)
+    # TODO: Make getting project name better - For now quick CI hack
+    coverage_key_count = 0
+    for key in stats_json.keys():
+        if "_coverage." in key:
+            coverage_key_count += 1
+    if coverage_key_count != 4:
+        print("We didn't get coverage stats for all ptr files + total", file=stderr)
         stats_errors += 1
 
-    print("Stats check found {} errors".format(stats_errors))
+    print("Stats check found {} error(s)".format(stats_errors))
+
     return stats_errors
 
 
@@ -53,18 +62,11 @@ def integration_test() -> int:
     print("Running `ptr` integration tests (aka run itself)", file=stderr)
 
     stats_file = Path(gettempdir()) / "ptr_ci_stats"
-    cp = run(
-        (
-            "python",
-            "ptr.py",
-            "-d",
-            "--print-cov",
-            "--stats-file",
-            str(stats_file),
-            "--venv",
-            environ["VIRTUAL_ENV"],
-        )
-    )
+    ci_cmd = ["python", "ptr.py", "-d", "--print-cov", "--stats-file", str(stats_file)]
+    if "VIRTUAL_ENV" in environ:
+        ci_cmd.extend(["--venv", environ["VIRTUAL_ENV"]])
+
+    cp = run(ci_cmd)
     return cp.returncode + check_ptr_stats_json(stats_file)
 
 
