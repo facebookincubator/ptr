@@ -272,7 +272,7 @@ class TestPtr(unittest.TestCase):
             ptr._gen_check_output(("/bin/echo",))
         )
         self.assertEqual(stdout, b"\n")
-        self.assertEqual(stderr, b"")
+        self.assertEqual(stderr, None)
 
         with self.assertRaises(CalledProcessError):
             false = "/usr/bin/false" if system() == "Darwin" else "/bin/false"
