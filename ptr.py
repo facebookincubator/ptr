@@ -338,7 +338,7 @@ async def _gen_check_output(
     env: Optional[Dict[str, str]] = None,
 ) -> Tuple[bytes, bytes]:
     process = await asyncio.create_subprocess_exec(
-        *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env
+        *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, env=env
     )
     try:
         (stdout, stderr) = await asyncio.wait_for(process.communicate(), timeout)
@@ -509,14 +509,7 @@ async def _test_steps_runner(
             else:
                 LOG.debug("Skipping running a cmd for {} step".format(a_step))
         except CalledProcessError as cpe:
-            if a_step.step_name in {
-                StepName.mypy_run,
-                StepName.flake8_run,
-                StepName.pylint_run,
-            }:
-                err_output = cpe.stdout.decode("utf-8")
-            else:
-                err_output = cpe.stderr.decode("utf-8")
+            err_output = cpe.stdout.decode("utf-8")
 
             LOG.debug("{} FAILED for {}".format(a_step.log_message, setup_py_path))
             a_test_result = test_result(
