@@ -15,7 +15,6 @@ from configparser import ConfigParser
 from enum import Enum
 from json import dump
 from os import chdir, cpu_count, environ, getcwd, getpid
-from os.path import sep as path_separator
 from pathlib import Path
 from shutil import rmtree
 from subprocess import CalledProcessError
@@ -336,9 +335,14 @@ async def _gen_check_output(
     cmd: Iterable[str],
     timeout: Union[int, float] = 30,
     env: Optional[Dict[str, str]] = None,
+    cwd: Optional[Path] = None,
 ) -> Tuple[bytes, bytes]:
     process = await asyncio.create_subprocess_exec(
-        *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, env=env
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+        env=env,
+        cwd=cwd
     )
     try:
         (stdout, stderr) = await asyncio.wait_for(process.communicate(), timeout)
@@ -423,11 +427,6 @@ async def _test_steps_runner(
     pip_exe = venv_path / "bin" / "pip"
     pylint_exe = venv_path / "bin" / "pylint"
     config = tests_to_run[setup_py_path]
-    setup_py_parent_path = setup_py_path.parent
-    # For running unit tests via coverage in the venv
-    test_entry_point = setup_py_parent_path / "{}.py".format(
-        config["test_suite"].replace(".", path_separator)
-    )
 
     steps = (
         step(
@@ -440,8 +439,8 @@ async def _test_steps_runner(
         step(
             StepName.tests_run,
             True,
-            (str(coverage_exe), "run", str(test_entry_point)),
-            "Running {} tests via coverage".format(test_entry_point),
+            (str(coverage_exe), "run", "-m", config["test_suite"]),
+            "Running {} tests via coverage".format(config["test_suite"]),
             config["test_suite_timeout"],
         ),
         step(
@@ -504,7 +503,7 @@ async def _test_steps_runner(
             if a_step.cmds:
                 LOG.debug("CMD: {}".format(" ".join(a_step.cmds)))
                 stdout, _stderr = await _gen_check_output(
-                    a_step.cmds, a_step.timeout, env=env
+                    a_step.cmds, a_step.timeout, env=env, cwd=setup_py_path.parent
                 )
             else:
                 LOG.debug("Skipping running a cmd for {} step".format(a_step))
