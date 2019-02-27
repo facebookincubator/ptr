@@ -29,9 +29,10 @@ LOG = logging.getLogger(__name__)
 MAC = system() == "Darwin"
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
-# TODO: Workout how to make mypy happy with this on non Windows platforms
-if WINDOWS:
-    asyncio.set_event_loop(asyncio.ProactorEventLoop())  # type: ignore
+# Need to use sys.platform for mypy to understand
+# https://mypy.readthedocs.io/en/latest/common_issues.html#python-version-and-system-platform-checks  # noqa: B950 # pylint: disable=C0301
+if sys.platform == "win32":
+    asyncio.set_event_loop(asyncio.ProactorEventLoop())
 
 
 def _config_default() -> ConfigParser:
@@ -74,6 +75,8 @@ PIP_CONF_TEMPLATE = """\
 [global]
 index-url = {}
 timeout = {}"""
+# Windows venv + pip are super slow
+VENV_TIMEOUT = 120 if WINDOWS else 30
 
 
 class StepName(Enum):
@@ -202,7 +205,7 @@ def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
     if not stats_file_path.is_absolute():
         stats_file_path = Path(CWD) / stats_file_path
     try:
-        with stats_file_path.open("w") as sfp:
+        with stats_file_path.open("w", encoding="utf8") as sfp:
             dump(stats, sfp, indent=2, sort_keys=True)
     except OSError as ose:
         LOG.exception(
@@ -295,7 +298,7 @@ def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict
             test_modules[setup_py] = ptr_params
             continue
 
-        with setup_py.open("r") as sp:
+        with setup_py.open("r", encoding="utf8") as sp:
             setup_tree = ast.parse(sp.read())
 
         LOG.debug("AST visiting {}".format(setup_py))
@@ -429,7 +432,7 @@ def _set_pip_mirror(
     venv_path: Path, mirror: str = CONFIG["ptr"]["pypi_url"], timeout: int = 2
 ) -> None:
     pip_conf_path = venv_path / "pip.conf"
-    with pip_conf_path.open("w") as pcfp:
+    with pip_conf_path.open("w", encoding="utf8") as pcfp:
         print(PIP_CONF_TEMPLATE.format(mirror, timeout), file=pcfp)
 
 
@@ -532,7 +535,7 @@ async def _test_steps_runner(
             else:
                 LOG.debug("Skipping running a cmd for {} step".format(a_step))
         except CalledProcessError as cpe:
-            err_output = cpe.stdout.decode("utf-8")
+            err_output = cpe.stdout.decode("utf8")
 
             LOG.debug("{} FAILED for {}".format(a_step.log_message, setup_py_path))
             a_test_result = test_result(
@@ -557,7 +560,7 @@ async def _test_steps_runner(
             )
 
         if a_step.step_name is StepName.analyze_coverage:
-            cov_report = stdout.decode("utf-8")
+            cov_report = stdout.decode("utf8")
             if print_cov:
                 print("{}:\n{}".format(setup_py_path, cov_report))
 
@@ -636,25 +639,37 @@ async def _test_runner(
 
 
 async def create_venv(
-    mirror: str, py_exe: str = sys.executable, install_pkgs: bool = True
+    mirror: str,
+    py_exe: str = sys.executable,
+    install_pkgs: bool = True,
+    timeout: float = VENV_TIMEOUT,
 ) -> Optional[Path]:
     start_time = time()
     venv_path = Path(gettempdir()) / "ptr_venv_{}".format(getpid())
-    pip_exe = venv_path / "bin" / "pip"
+    if WINDOWS:
+        pip_exe = venv_path / "Scripts" / "pip.exe"
+    else:
+        pip_exe = venv_path / "bin" / "pip"
+
     try:
-        await _gen_check_output((py_exe, "-m", "venv", str(venv_path)))
+        await _gen_check_output((py_exe, "-m", "venv", str(venv_path)), timeout=timeout)
         _set_pip_mirror(venv_path, mirror)
         if install_pkgs:
-            await _gen_check_output(
-                (
-                    str(pip_exe),
-                    "install",
-                    "--upgrade",
-                    *CONFIG["ptr"]["venv_pkgs"].split(),
-                )
-            )
+            install_cmd = [str(pip_exe), "install"]
+            # TODO: Workout why Windows can't uninstall / upgrade pip on Azure
+            # https://github.com/facebookincubator/ptr/issues/33
+            if not WINDOWS:
+                install_cmd.append("--upgrade")
+            install_cmd.extend(CONFIG["ptr"]["venv_pkgs"].split())
+            await _gen_check_output(install_cmd, timeout=timeout)
     except CalledProcessError as cpe:
-        LOG.exception("Failed to setup venv @ {} ({})".format(venv_path, cpe))
+        LOG.exception(
+            "Failed to setup venv @ {} - '{}'' ({})".format(venv_path, install_cmd, cpe)
+        )
+        if cpe.stderr:
+            LOG.debug("venv stderr:\n{}".format(cpe.stderr.decode("utf8")))
+        if cpe.output:
+            LOG.debug("venv stdout:\n{}".format(cpe.output.decode("utf8")))
         return None
 
     runtime = int(time() - start_time)
@@ -754,6 +769,8 @@ def print_test_results(
 
     total_time = -1 if "runtime.all_tests" not in stats else stats["runtime.all_tests"]
     print("-- Summary (total time {}s):\n".format(total_time))
+    # TODO: Hardcode some workaround to ensure Windows always prints UTF8
+    # https://github.com/facebookincubator/ptr/issues/34
     print(
         "✅ PASS: {}\n❌ FAIL: {}\n⌛️ TIMEOUT: {}\n💩 TOTAL: {}\n".format(
             stats["total.passes"],
@@ -790,12 +807,13 @@ async def run_tests(
     print_cov: bool,
     stats: Dict[str, int],
     stats_file: str,
+    venv_timeout: float,
 ) -> int:
     tests_start_time = time()
 
     if not venv_path or not venv_path.exists():
         venv_create_start_time = time()
-        venv_path = await create_venv(mirror=mirror)
+        venv_path = await create_venv(mirror=mirror, timeout=venv_timeout)
         stats["venv_create_time"] = int(time() - venv_create_start_time)
     else:
         venv_keep = True
@@ -852,6 +870,7 @@ async def async_main(
     venv_keep: bool,
     print_cov: bool,
     stats_file: str,
+    venv_timeout: float,
 ) -> int:
     stats = defaultdict(int)  # type: Dict[str, int]
     tests_to_run = _get_test_modules(base_path, stats)
@@ -881,6 +900,7 @@ async def async_main(
         print_cov,
         stats,
         stats_file,
+        venv_timeout,
     )
 
 
@@ -931,6 +951,13 @@ def main() -> None:
         help="JSON statistics file [Default: {}]".format(default_stats_file),
     )
     parser.add_argument("--venv", help="Path to venv to reuse")
+    parser.add_argument(
+        "--venv-timeout",
+        default=VENV_TIMEOUT,
+        help="Timeout in seconds for venv creation + deps install [Default: {}]".format(
+            VENV_TIMEOUT
+        ),
+    )
     args = parser.parse_args()
     _handle_debug(args.debug)
 
@@ -948,6 +975,7 @@ def main() -> None:
                     args.keep_venv,
                     args.print_cov,
                     args.stats_file,
+                    args.venv_timeout,
                 )
             )
         )

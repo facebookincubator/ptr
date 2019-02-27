@@ -20,6 +20,11 @@ from tempfile import gettempdir
 
 def check_ptr_stats_json(stats_file: Path) -> int:
     stats_errors = 0
+
+    if not stats_file.exists():
+        print("{} stats file does not exist".format(stats_file))
+        return 68
+
     try:
         with stats_file.open("r") as sfp:
             stats_json = json.load(sfp)
@@ -66,16 +71,25 @@ def integration_test() -> int:
     if "VIRTUAL_ENV" in environ:
         ci_cmd.extend(["--venv", environ["VIRTUAL_ENV"]])
 
-    cp = run(ci_cmd)
+    cp = run(ci_cmd, check=True)
     return cp.returncode + check_ptr_stats_json(stats_file)
 
 
-def ci() -> int:
+def ci(show_env: bool = False) -> int:
     # Output exact python version
     cp = run(("python", "-V"), stdout=PIPE, universal_newlines=True)
     print("Using {}".format(cp.stdout), file=stderr)
 
-    if "PTR_INTEGRATION" in environ:
+    if show_env:
+        print("- Environment:", file=stderr)
+        for key in sorted(environ.keys()):
+            print("{}: {}".format(key, environ[key]), file=stderr)
+
+    # Azure sets CI_ENV=PTR_INTEGRATION
+    # Travis sets PTR_INTEGRATION=1
+    if "PTR_INTEGRATION" in environ or (
+        "CI_ENV" in environ and environ["CI_ENV"] == "PTR_INTEGRATION"
+    ):
         return integration_test()
 
     print("Running `ptr` unit tests", file=stderr)
