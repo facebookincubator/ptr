@@ -7,10 +7,12 @@
 # flake8: noqa
 
 from os import environ
+from os.path import sep
 from pathlib import Path
 from sys import version_info
+from tempfile import gettempdir
 
-from ptr import WINDOWS, test_result
+from ptr import test_result
 
 
 class FakeEventLoop:
@@ -32,15 +34,12 @@ EXPECTED_TEST_PARAMS = {
     "run_pylint": True,
 }
 
-COV_PATH_SEP = "\\" if WINDOWS else "/"
 EXPECTED_COVERAGE_FAIL_RESULT = test_result(
     setup_py_path=Path("unittest/setup.py"),
     returncode=3,
     output=(
         "The following files did not meet coverage requirements:\n"
-        + "  unittest{}ptr.py: 69 < 99 - Missing: 70-72, 76-94, 98\n".format(
-            COV_PATH_SEP
-        )
+        + "  unittest{}ptr.py: 69 < 99 - Missing: 70-72, 76-94, 98\n".format(sep)
     ),
     runtime=0,
     timeout=False,
@@ -50,7 +49,7 @@ EXPECTED_PTR_COVERAGE_FAIL_RESULT = test_result(
     returncode=3,
     output=(
         "The following files did not meet coverage requirements:\n  tg{}tg.py: ".format(
-            COV_PATH_SEP
+            sep
         )
         + "22 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  "
         + "TOTAL: 40 < 99 - Missing: \n"
@@ -90,16 +89,16 @@ FAKE_TG_REQ_COVERAGE = {str(Path("tg/tg.py")): 99, "TOTAL": 99}
 SAMPLE_REPORT_OUTPUT = """\
 Name                                Stmts   Miss  Cover   Missing
 ------------------------------------------------------------------
-unittest/ptr.py                     59     14     69%     70-72, 76-94, 98
-unittest/ptr_tests.py               24      0     100%
-unittest/ptr_venv_fixtures.py        1      0     100%
+unittest{sep}ptr.py                     59     14     69%     70-72, 76-94, 98
+unittest{sep}ptr_tests.py               24      0     100%
+unittest{sep}ptr_venv_fixtures.py        1      0     100%
 ------------------------------------------------------------------
 TOTAL                                84     14    99%
-"""
-
-HARD_SET_VENV = (
-    Path("C:\\tmp\\ptr_venv_2580217") if WINDOWS else Path("/tmp/ptr_venv_2580217")
+""".format(
+    sep=sep
 )
+
+HARD_SET_VENV = Path("{}/ptr_venv_2580217".format(gettempdir()))
 BASE_VENV_PATH = (
     Path(environ["VIRTUAL_ENV"]) if "VIRTUAL_ENV" in environ else HARD_SET_VENV
 )

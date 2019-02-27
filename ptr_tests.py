@@ -55,10 +55,6 @@ def return_specific_pid(*args: Any, **kwargs: Any) -> int:
     return 2580217
 
 
-def return_specific_tmp(*args: Any, **kwargs: Any) -> str:
-    return "C:\\tmp" if ptr.WINDOWS else "/tmp"
-
-
 def touch_files(*paths: Path) -> None:
     for path in paths:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -81,7 +77,6 @@ class TestPtr(unittest.TestCase):
             ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report", {})
         )
 
-    @patch("ptr.gettempdir", return_specific_tmp)  # noqa
     @patch("ptr.getpid", return_specific_pid)  # noqa
     def test_analyze_coverage(self) -> None:
         fake_setup_py = Path("unittest/setup.py")

@@ -41,7 +41,7 @@ def _config_default() -> ConfigParser:
     cp["ptr"]["atonce"] = str(int((cpu_count() or 20) / 2))
     cp["ptr"]["exclude_patterns"] = "build* yocto"
     cp["ptr"]["pypi_url"] = "https://pypi.org/simple/"
-    cp["ptr"]["venv_pkgs"] = "black coverage mypy pip setuptools"
+    cp["ptr"]["venv_pkgs"] = "black coverage flake8 mypy pip pylint setuptools"
     return cp
 
 
@@ -389,18 +389,26 @@ async def _progress_reporter(
 def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
     build_environ = environ.copy()
     if not build_base_path or not build_base_path.exists():
-        LOG.error(
-            "Configured local build env path {} does not exist".format(build_base_path)
-        )
+        if build_base_path:
+            LOG.error(
+                "Configured local build env path {} does not exist".format(
+                    build_base_path
+                )
+            )
         return build_environ
 
     if build_base_path.exists():
-        build_env_vars = (
-            ("PATH", build_base_path / "sbin"),
-            ("PATH", build_base_path / "bin"),
+        build_env_vars = [
+            (
+                ("PATH", build_base_path / "Scripts")
+                if WINDOWS
+                else ("PATH", build_base_path / "sbin")
+            ),
             ("C_INCLUDE_PATH", build_base_path / "include"),
             ("CPLUS_INCLUDE_PATH", build_base_path / "include"),
-        )
+        ]
+        if not WINDOWS:
+            build_env_vars.append(("PATH", build_base_path / "bin"))
 
         for var_name, value in build_env_vars:
             if var_name in build_environ:
@@ -434,12 +442,14 @@ async def _test_steps_runner(
     stats: Dict[str, int],
     print_cov: bool = False,
 ) -> Tuple[Optional[test_result], int]:
-    black_exe = venv_path / "bin" / "black"
-    coverage_exe = venv_path / "bin" / "coverage"
-    flake8_exe = venv_path / "bin" / "flake8"
-    mypy_exe = venv_path / "bin" / "mypy"
-    pip_exe = venv_path / "bin" / "pip"
-    pylint_exe = venv_path / "bin" / "pylint"
+    bin_dir = "Scripts" if WINDOWS else "bin"
+    exe = ".exe" if WINDOWS else ""
+    black_exe = venv_path / bin_dir / "black{}".format(exe)
+    coverage_exe = venv_path / bin_dir / "coverage{}".format(exe)
+    flake8_exe = venv_path / bin_dir / "flake8{}".format(exe)
+    mypy_exe = venv_path / bin_dir / "mypy{}".format(exe)
+    pip_exe = venv_path / bin_dir / "pip{}".format(exe)
+    pylint_exe = venv_path / bin_dir / "pylint{}".format(exe)
     config = tests_to_run[setup_py_path]
 
     steps = (
