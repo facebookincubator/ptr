@@ -11,7 +11,6 @@ from collections import defaultdict
 from copy import deepcopy
 from os import environ
 from pathlib import Path
-from platform import system
 from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory, gettempdir
@@ -56,10 +55,6 @@ def return_specific_pid(*args: Any, **kwargs: Any) -> int:
     return 2580217
 
 
-def return_specific_tmp(*args: Any, **kwargs: Any) -> str:
-    return "/tmp"
-
-
 def touch_files(*paths: Path) -> None:
     for path in paths:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -67,6 +62,8 @@ def touch_files(*paths: Path) -> None:
 
 
 class TestPtr(unittest.TestCase):
+    maxDiff = 2000
+
     def setUp(self) -> None:
         self.loop = asyncio.get_event_loop()
 
@@ -80,7 +77,6 @@ class TestPtr(unittest.TestCase):
             ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report", {})
         )
 
-    @patch("ptr.gettempdir", return_specific_tmp)  # noqa
     @patch("ptr.getpid", return_specific_pid)  # noqa
     def test_analyze_coverage(self) -> None:
         fake_setup_py = Path("unittest/setup.py")
@@ -110,12 +106,17 @@ class TestPtr(unittest.TestCase):
         )
 
         # Test with venv installed modules
+        cov_report = (
+            ptr_tests_fixtures.SAMPLE_WIN_TG_REPORT_OUTPUT
+            if ptr.WINDOWS
+            else ptr_tests_fixtures.SAMPLE_NIX_TG_REPORT_OUTPUT
+        )
         self.assertEqual(
             ptr._analyze_coverage(
                 fake_venv_path,
                 fake_setup_py,
                 ptr_tests_fixtures.FAKE_TG_REQ_COVERAGE,
-                ptr_tests_fixtures.SAMPLE_TG_REPORT_OUTPUT,
+                cov_report,
                 {},
             ),
             ptr_tests_fixtures.EXPECTED_PTR_COVERAGE_FAIL_RESULT,
@@ -268,14 +269,22 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(stats["total.ptr_setup_pys"], 1)
 
     def test_gen_output(self) -> None:
-        stdout, stderr = self.loop.run_until_complete(
-            ptr._gen_check_output(("/bin/echo",))
-        )
-        self.assertEqual(stdout, b"\n")
+        test_cmd = ("echo.exe", "''") if ptr.WINDOWS else ("/bin/echo",)
+
+        stdout, stderr = self.loop.run_until_complete(ptr._gen_check_output(test_cmd))
+        self.assertTrue(b"\n" in stdout)
         self.assertEqual(stderr, None)
 
+        if ptr.WINDOWS:
+            return
+
+        # TODO: Test this on Windows and ensure we capture failures corerctly
         with self.assertRaises(CalledProcessError):
-            false = "/usr/bin/false" if system() == "Darwin" else "/bin/false"
+            if ptr.MAC:
+                false = "/usr/bin/false"
+            else:
+                false = "/bin/false"
+
             self.loop.run_until_complete(ptr._gen_check_output((false,)))
 
     def test_handle_debug(self) -> None:
@@ -327,13 +336,13 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(mock_log.call_count, 2)
 
     def test_set_build_env(self) -> None:
-        local_build = Path("/usr/local")
-        build_env = ptr._set_build_env(local_build)
+        local_build_path = Path(gettempdir())
+        build_env = ptr._set_build_env(local_build_path)
         self.assertTrue(
-            "{}/include".format(str(local_build)) in build_env["C_INCLUDE_PATH"]
+            str(local_build_path / "include") in build_env["C_INCLUDE_PATH"]
         )
         self.assertTrue(
-            "{}/include".format(str(local_build)) in build_env["CPLUS_INCLUDE_PATH"]
+            str(local_build_path / "include") in build_env["CPLUS_INCLUDE_PATH"]
         )
 
     def test_set_pip_mirror(self) -> None:
