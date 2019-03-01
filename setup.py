@@ -17,7 +17,7 @@ ptr_params = {
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
     # Relative path from setup.py to module (e.g. ptr == ptr.py)
-    "required_coverage": {"ptr.py": 85, "TOTAL": 90},
+    "required_coverage": {"ptr.py": 84, "TOTAL": 90},
     # Run black or not
     "run_black": True,
     # Run mypy or not
@@ -41,7 +41,7 @@ def get_long_desc() -> str:
 
 
 setup(
-    name="ptr",
+    name=ptr_params["entry_point_module"],
     version="19.2.12",
     description="Parallel asyncio Python setup.(cfg|py) Test Runner",
     long_description=get_long_desc(),

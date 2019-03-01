@@ -129,7 +129,7 @@ class TestPtr(unittest.TestCase):
     @patch("ptr.run_tests", async_none)
     @patch("ptr._get_test_modules")
     def test_async_main(self, mock_gtm: Mock) -> None:
-        args = [1, Path("/"), "mirror", 1, "venv", True, True, "stats"]
+        args = [1, Path("/"), "mirror", 1, "venv", True, True, "stats", 30]
         mock_gtm.return_value = False
         self.assertEqual(self.loop.run_until_complete(ptr.async_main(*args)), 1)
         mock_gtm.return_value = True

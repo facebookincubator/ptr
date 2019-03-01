@@ -132,9 +132,9 @@ disable=print-statement,
         global-statement,
         invalid-name,
         duplicate-code,
-		unused-argument,
-		missing-docstring,
-		function-redefined,
+        unused-argument,
+        missing-docstring,
+        function-redefined,
         too-many-public-methods,
         protected-access,
         logging-format-interpolation,
@@ -302,7 +302,7 @@ redefining-builtins-modules=six.moves,past.builtins,future.builtins
 [FORMAT]
 
 # Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
-expected-line-ending-format=LF
+expected-line-ending-format=
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
