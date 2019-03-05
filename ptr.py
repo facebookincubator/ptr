@@ -400,9 +400,6 @@ def _run_black(config: Dict, force_black: bool = False) -> bool:
         )
         return False
 
-    if force_black:
-        return True
-
     return bool("run_black" in config and config["run_black"])
 
 
