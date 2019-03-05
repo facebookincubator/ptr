@@ -36,12 +36,10 @@ jobs:
       Python37:
         python.version: '3.7'
         ci.env: 'py37'
-# Renable when `black.exe` works with Python 3.7
-# https://github.com/ambv/black/issues/728
-#      Python37Integration:
-#        python.version: '3.7'
-#        ci.env: 'PTR_INTEGRATION'
-#        pythonioencoding: 'utf-8'
+      Python37Integration:
+        python.version: '3.7'
+        ci.env: 'PTR_INTEGRATION'
+        pythonioencoding: 'utf-8'
 
   steps:
   - task: UsePythonVersion@0
