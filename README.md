@@ -9,6 +9,7 @@ Python Test Runner (ptr) was born to run tests in an opinionated way, within arb
 
 - `ptr` requires `>=` **python 3.6**
 - `ptr` itself uses `ptr` to run its tests 👌🏼
+- `ptr` is supported and tested on *Linux*, *MacOS* + *Windows* Operating Systems
 
 By adding `ptr` configuration to your `setup.cfg` or `setup.py` you can have `ptr` perform the following, per test suite, in parallel:
 - run your test suite

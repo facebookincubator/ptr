@@ -2,6 +2,18 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.3.5
+Codename: **Jaipur**
+
+*🇮🇳 @cooperlees releasing whilst in Jaipur, India for a wedding 💒*
+
+- Preliminary Windows support now ready for testing - Issue: #2
+- Run tests/mypy/flake8 etc. in CWD of setup.py path - Issue #23 - Thanks @jreese
+- Add support for linting with flake8 and pylint - Issue #20 - Thanks @jreese
+- Ignore dotted directories when running black - PR #19 - Thanks @jreese
+
+**Known Bug:** `black.exe` does not run in Windows 3.7 - **disabled** by *default* on Python 3.7 on Windows
+
 ### 2019.2.12
 Codename: **Forbes**
 
