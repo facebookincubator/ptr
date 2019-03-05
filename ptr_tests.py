@@ -13,6 +13,7 @@ from os import environ
 from pathlib import Path
 from shutil import rmtree
 from subprocess import CalledProcessError
+from sys import version_info
 from tempfile import TemporaryDirectory, gettempdir
 from typing import (  # noqa: F401 # pylint: disable=unused-import
     Any,
@@ -129,7 +130,7 @@ class TestPtr(unittest.TestCase):
     @patch("ptr.run_tests", async_none)
     @patch("ptr._get_test_modules")
     def test_async_main(self, mock_gtm: Mock) -> None:
-        args = [1, Path("/"), "mirror", 1, "venv", True, True, "stats", 30]
+        args = [1, Path("/"), "mirror", 1, "venv", True, True, False, "stats", 30]
         mock_gtm.return_value = False
         self.assertEqual(self.loop.run_until_complete(ptr.async_main(*args)), 1)
         mock_gtm.return_value = True
@@ -335,6 +336,17 @@ class TestPtr(unittest.TestCase):
         )
         self.assertEqual(mock_log.call_count, 2)
 
+    def test_run_black(self) -> None:
+        config = {}  # type: Dict[str, Any]
+        self.assertFalse(ptr._run_black(config, False))
+        self.assertFalse(ptr._run_black(config, True))
+        config["run_black"] = True
+        if ptr.WINDOWS and version_info >= (3, 7):
+            # Ensure even if in config we don't run it
+            self.assertFalse(ptr._run_black(config, False))
+        else:
+            self.assertTrue(ptr._run_black(config, False))
+
     def test_set_build_env(self) -> None:
         local_build_path = Path(gettempdir())
         build_env = ptr._set_build_env(local_build_path)
@@ -371,7 +383,7 @@ class TestPtr(unittest.TestCase):
             stats = defaultdict(int)  # type: Dict[str, int]
             self.loop.run_until_complete(
                 ptr._test_runner(
-                    queue, tests_to_run, test_results, td_path, False, stats, 69
+                    queue, tests_to_run, test_results, td_path, False, False, stats, 69
                 )
             )
             self.assertEqual(len(test_results), 1)
@@ -405,7 +417,10 @@ class TestPtr(unittest.TestCase):
                 (None, 6),
             )
 
-            # Run everything including black
+            # Run everything including black except on Windows + Python 3.7
+            expected = (
+                (None, 6) if ptr.WINDOWS and version_info >= (3, 7) else (None, 7)
+            )
             fake_tests_to_run = {fake_setup_py: ptr_tests_fixtures.EXPECTED_TEST_PARAMS}
             self.assertEqual(
                 self.loop.run_until_complete(
@@ -419,7 +434,7 @@ class TestPtr(unittest.TestCase):
                         True,
                     )
                 ),
-                (None, 7),
+                expected,
             )
             # Ensure we've "printed coverage"
             self.assertTrue(mock_print.called)

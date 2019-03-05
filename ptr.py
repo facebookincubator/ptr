@@ -389,6 +389,20 @@ async def _progress_reporter(
     LOG.debug("progress_reporter finished")
 
 
+# TODO: Remove when black works with Python 3.7 on Windows
+def _run_black(config: Dict, force_black: bool = False) -> bool:
+    """ Check if we're Windows and Python 3.7 or disabled via config
+       `black.exe` is broken with Python 3.7 - Issue Open:
+       https://github.com/ambv/black/issues/728 """
+    if not force_black and WINDOWS and sys.version_info >= (3, 7):
+        LOG.error(
+            "black is hard disabled due to not working with Python 3.7 on Windows"
+        )
+        return False
+
+    return bool("run_black" in config and config["run_black"])
+
+
 def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
     build_environ = environ.copy()
     if not build_base_path or not build_base_path.exists():
@@ -444,6 +458,7 @@ async def _test_steps_runner(
     env: Dict,
     stats: Dict[str, int],
     print_cov: bool = False,
+    force_black: bool = False,
 ) -> Tuple[Optional[test_result], int]:
     bin_dir = "Scripts" if WINDOWS else "bin"
     exe = ".exe" if WINDOWS else ""
@@ -490,7 +505,7 @@ async def _test_steps_runner(
         ),
         step(
             StepName.black_run,
-            bool("run_black" in config and config["run_black"]),
+            _run_black(config, force_black),
             _generate_black_cmd(setup_py_path.parent, black_exe),
             "Running black for {}".format(setup_py_path),
             config["test_suite_timeout"],
@@ -586,6 +601,7 @@ async def _test_runner(
     test_results: List[test_result],
     venv_path: Path,
     print_cov: bool,
+    force_black: bool,
     stats: Dict[str, int],
     idx: int,
 ) -> None:
@@ -618,6 +634,7 @@ async def _test_runner(
             env,
             stats,
             print_cov,
+            force_black,
         )
         total_success_runtime = int(time() - test_run_start_time)
         if test_fail_result:
@@ -805,6 +822,7 @@ async def run_tests(
     venv_path: Optional[Path],
     venv_keep: bool,
     print_cov: bool,
+    force_black: bool,
     stats: Dict[str, int],
     stats_file: str,
     venv_timeout: float,
@@ -833,7 +851,14 @@ async def run_tests(
     test_results = []  # type: List[test_result]
     consumers = [
         _test_runner(
-            queue, tests_to_run, test_results, venv_path, print_cov, stats, i + 1
+            queue,
+            tests_to_run,
+            test_results,
+            venv_path,
+            print_cov,
+            force_black,
+            stats,
+            i + 1,
         )
         for i in range(atonce)
     ]
@@ -869,6 +894,7 @@ async def async_main(
     venv: str,
     venv_keep: bool,
     print_cov: bool,
+    force_black: bool,
     stats_file: str,
     venv_timeout: float,
 ) -> int:
@@ -898,6 +924,7 @@ async def async_main(
         venv_path,
         venv_keep,
         print_cov,
+        force_black,
         stats,
         stats_file,
         venv_timeout,
@@ -924,6 +951,11 @@ def main() -> None:
     )
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Verbose debug output"
+    )
+    parser.add_argument(
+        "--force-black",
+        action="store_true",
+        help="Ensure black runs if enabled in config",
     )
     parser.add_argument(
         "-k", "--keep-venv", action="store_true", help="Do not remove created venv"
@@ -974,6 +1006,7 @@ def main() -> None:
                     args.venv,
                     args.keep_venv,
                     args.print_cov,
+                    args.force_black,
                     args.stats_file,
                     args.venv_timeout,
                 )
