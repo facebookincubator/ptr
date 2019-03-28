@@ -780,7 +780,9 @@ def print_test_results(
                 stats["total.timeouts"] += 1
             else:
                 stats["total.fails"] += 1
-            fail_output += "{}:\n{}\n".format(result.setup_py_path, result.output)
+            fail_output += "{} (failed '{}' step):\n{}\n".format(
+                result.setup_py_path, StepName(result.returncode).name, result.output
+            )
         else:
             stats["total.passes"] += 1
 
