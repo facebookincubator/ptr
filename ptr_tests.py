@@ -132,12 +132,18 @@ class TestPtr(unittest.TestCase):
     def test_async_main(self, mock_gtm: Mock) -> None:
         args = [1, Path("/"), "mirror", 1, "venv", True, True, False, "stats", 30]
         mock_gtm.return_value = False
-        self.assertEqual(self.loop.run_until_complete(ptr.async_main(*args)), 1)  # pyre-ignore
+        self.assertEqual(
+            self.loop.run_until_complete(ptr.async_main(*args)), 1  # pyre-ignore
+        )
         mock_gtm.return_value = True
-        self.assertEqual(self.loop.run_until_complete(ptr.async_main(*args)), 2)  # pyre-ignore
+        self.assertEqual(
+            self.loop.run_until_complete(ptr.async_main(*args)), 2  # pyre-ignore
+        )
         # Make Path() throw a TypeError on purpose
         args[4] = 0.69  # pyre-ignore
-        self.assertIsNone(self.loop.run_until_complete(ptr.async_main(*args)))  # pyre-ignore
+        self.assertIsNone(
+            self.loop.run_until_complete(ptr.async_main(*args))  # pyre-ignore
+        )
 
     def test_config(self) -> None:
         expected_pypi_url = "https://pypi.org/simple/"
@@ -147,7 +153,9 @@ class TestPtr(unittest.TestCase):
 
         td = Path(__file__).parent
         sc = ptr._config_read(str(td), "ptrconfig.sample")
-        self.assertEqual(sc["ptr"].get("pypi_url", ""), expected_pypi_url)  # pyre-ignore
+        self.assertEqual(
+            sc["ptr"].get("pypi_url", ""), expected_pypi_url  # pyre-ignore
+        )
         self.assertEqual(len(sc["ptr"].get("venv_pkgs", "").split()), 7)  # pyre-ignore
 
     @patch("ptr._gen_check_output", async_none)  # noqa
