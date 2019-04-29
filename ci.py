@@ -84,7 +84,7 @@ def pyre_check() -> int:
 
 def ci(show_env: bool = False) -> int:
     # Output exact python version
-    cp = run(("python3", "-V"), stdout=PIPE, universal_newlines=True)
+    cp = run(("python", "-V"), stdout=PIPE, universal_newlines=True)
     print("Using {}".format(cp.stdout), file=stderr)
 
     if show_env:
