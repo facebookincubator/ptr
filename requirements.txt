@@ -4,4 +4,5 @@ flake8
 mypy
 pip
 pylint
+pyre-check
 setuptools

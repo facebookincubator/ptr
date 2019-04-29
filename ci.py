@@ -75,15 +75,25 @@ def integration_test() -> int:
     return cp.returncode + check_ptr_stats_json(stats_file)
 
 
+def pyre_check() -> int:
+    print("Running `pyre` type checking", file=stderr)
+    pyre_cmd = ["pyre", "--source-directory", ".", "check"]
+    cp = run(pyre_cmd, check=True)
+    return cp.returncode
+
+
 def ci(show_env: bool = False) -> int:
     # Output exact python version
-    cp = run(("python", "-V"), stdout=PIPE, universal_newlines=True)
+    cp = run(("python3", "-V"), stdout=PIPE, universal_newlines=True)
     print("Using {}".format(cp.stdout), file=stderr)
 
     if show_env:
         print("- Environment:", file=stderr)
         for key in sorted(environ.keys()):
             print("{}: {}".format(key, environ[key]), file=stderr)
+
+    if "PYRE_CHECK" in environ:
+        return pyre_check()
 
     # Azure sets CI_ENV=PTR_INTEGRATION
     # Travis sets PTR_INTEGRATION=1
