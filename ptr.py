@@ -669,7 +669,7 @@ async def create_venv(
     else:
         pip_exe = venv_path / "bin" / "pip"
 
-    install_cmd = []
+    install_cmd: List[str] = []
     try:
         await _gen_check_output((py_exe, "-m", "venv", str(venv_path)), timeout=timeout)
         _set_pip_mirror(venv_path, mirror)
