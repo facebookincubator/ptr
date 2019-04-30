@@ -100,3 +100,6 @@ UNKNOWN.egg-info/
 /.mypy_cache
 /.pytest_cache
 /docs/html
+
+# pyre checking
+.pyre/

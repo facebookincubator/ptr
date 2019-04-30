@@ -375,7 +375,7 @@ async def _gen_check_output(
 
 
 async def _progress_reporter(
-    progress_interval: Union[float, int], queue: asyncio.Queue, total_tests: int
+    progress_interval: float, queue: asyncio.Queue, total_tests: int
 ) -> None:
     while queue.qsize() > 0:
         done_count = total_tests - queue.qsize()
@@ -540,6 +540,7 @@ async def _test_steps_runner(
                 continue
 
         LOG.info(a_step.log_message)
+        stdout = b""
         steps_ran += 1
         try:
             if a_step.cmds:
@@ -575,7 +576,7 @@ async def _test_steps_runner(
             )
 
         if a_step.step_name is StepName.analyze_coverage:
-            cov_report = stdout.decode("utf8")
+            cov_report = stdout.decode("utf8") if stdout else ""
             if print_cov:
                 print("{}:\n{}".format(setup_py_path, cov_report))
 
@@ -668,6 +669,7 @@ async def create_venv(
     else:
         pip_exe = venv_path / "bin" / "pip"
 
+    install_cmd: List[str] = []
     try:
         await _gen_check_output((py_exe, "-m", "venv", str(venv_path)), timeout=timeout)
         _set_pip_mirror(venv_path, mirror)

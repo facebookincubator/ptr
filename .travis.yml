@@ -9,6 +9,8 @@ matrix:
       env: PTR_INTEGRATION=1
     - python: 3.7
     - python: 3.7
+      env: PYRE_CHECK=1
+    - python: 3.7
       env: PTR_INTEGRATION=1
     - python: 3.8-dev
   allow_failures:
