@@ -1,0 +1,8 @@
+steps:
+- task: UsePythonVersion@0
+  displayName: Use Python $(python.version)
+  inputs:
+    versionSpec: '$(python.version)'
+
+- script: python ci.py
+  displayName: 'Running CI for $(ci.env)'

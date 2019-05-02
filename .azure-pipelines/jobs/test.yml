@@ -1,0 +1,35 @@
+parameters:
+  vmImage:
+
+jobs:
+- job: Test_PTR
+  displayName: Test ptr
+
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  strategy:
+    matrix:
+      Python36:
+        python.version: '3.6'
+        python.architecture: x64
+        ci.env: 'py36'
+        pythonioencoding: 'utf-8'
+      Python36Integration:
+        python.version: '3.6'
+        python.architecture: x64
+        ci.env: 'PTR_INTEGRATION'
+        pythonioencoding: 'utf-8'
+      Python37:
+        python.version: '3.7'
+        python.architecture: x64
+        ci.env: 'py37'
+        pythonioencoding: 'utf-8'
+      Python37Integration:
+        python.version: '3.7'
+        python.architecture: x64
+        ci.env: 'PTR_INTEGRATION'
+        pythonioencoding: 'utf-8'
+    maxParallel: 4
+
+  steps:
+  - template: ../steps/run-tests.yml
