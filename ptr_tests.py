@@ -156,7 +156,7 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(
             sc["ptr"].get("pypi_url", ""), expected_pypi_url  # pyre-ignore
         )
-        self.assertEqual(len(sc["ptr"].get("venv_pkgs", "").split()), 7)  # pyre-ignore
+        self.assertEqual(len(sc["ptr"].get("venv_pkgs", "").split()), 8)  # pyre-ignore
 
     @patch("ptr._gen_check_output", async_none)  # noqa
     @patch("ptr._set_pip_mirror")  # noqa
@@ -259,6 +259,20 @@ class TestPtr(unittest.TestCase):
                 ptr._generate_pylint_cmd(module_dir, pylint_exe, conf),
                 (str(pylint_exe), "--rcfile", str(cf), str(py1), str(py2)),
             )
+
+    def test_generate_pyre_cmd(self) -> None:
+        with TemporaryDirectory() as td:
+            td_path = Path(td)
+            pyre_exe = Path("pyre")
+
+            conf = {"run_pyre": True}
+            if ptr.WINDOWS:
+                self.assertEqual(ptr._generate_pyre_cmd(td_path, pyre_exe, conf), ())
+            else:
+                self.assertEqual(
+                    ptr._generate_pyre_cmd(td_path, pyre_exe, conf),
+                    (str(pyre_exe), "--source-directory", str(td_path), "check"),
+                )
 
     def test_get_site_packages_path_error(self) -> None:
         with TemporaryDirectory() as td:
@@ -422,13 +436,20 @@ class TestPtr(unittest.TestCase):
                         True,
                     )
                 ),
-                (None, 6),
+                # Windows will not run pyre
+                (None, 6) if ptr.WINDOWS else (None, 7),
             )
 
-            # Run everything including black except on Windows + Python 3.7
-            expected = (
-                (None, 6) if ptr.WINDOWS and version_info >= (3, 7) else (None, 7)
-            )
+            if ptr.WINDOWS and version_info >= (3, 7):
+                # No pyre + black
+                expected = (None, 6)
+            elif ptr.WINDOWS:
+                # No pyre
+                expected = (None, 7)
+            else:
+                # Running all steps on everything else
+                expected = (None, 8)
+
             fake_tests_to_run = {fake_setup_py: ptr_tests_fixtures.EXPECTED_TEST_PARAMS}
             self.assertEqual(
                 self.loop.run_until_complete(

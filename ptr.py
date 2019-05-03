@@ -36,13 +36,18 @@ if sys.platform == "win32":
 
 
 def _config_default() -> ConfigParser:
+    if WINDOWS:
+        venv_pkgs = "black coverage flake8 mypy pip pylint setuptools"
+    else:
+        venv_pkgs = "black coverage flake8 mypy pip pylint pyre-check setuptools"
+
     LOG.info("Using default config settings")
     cp = ConfigParser()
     cp["ptr"] = {}
     cp["ptr"]["atonce"] = str(int((cpu_count() or 20) / 2))
     cp["ptr"]["exclude_patterns"] = "build* yocto"
     cp["ptr"]["pypi_url"] = "https://pypi.org/simple/"
-    cp["ptr"]["venv_pkgs"] = "black coverage flake8 mypy pip pylint setuptools"
+    cp["ptr"]["venv_pkgs"] = venv_pkgs
     return cp
 
 
@@ -87,6 +92,7 @@ class StepName(Enum):
     black_run = 5
     pylint_run = 6
     flake8_run = 7
+    pyre_run = 8
 
 
 coverage_line = namedtuple("coverage_line", ["stmts", "miss", "cover", "missing"])
@@ -280,6 +286,15 @@ def _generate_pylint_cmd(
     return (*cmds, *sorted(py_files))
 
 
+def _generate_pyre_cmd(
+    module_dir: Path, pyre_exe: Path, config: Dict
+) -> Tuple[str, ...]:
+    if not config.get("run_pyre", False) or WINDOWS:
+        return ()
+
+    return (str(pyre_exe), "--source-directory", str(module_dir), "check")
+
+
 def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict]:
     get_tests_start_time = time()
     all_setup_pys = find_setup_pys(
@@ -468,6 +483,7 @@ async def _test_steps_runner(
     mypy_exe = venv_path / bin_dir / "mypy{}".format(exe)
     pip_exe = venv_path / bin_dir / "pip{}".format(exe)
     pylint_exe = venv_path / bin_dir / "pylint{}".format(exe)
+    pyre_exe = venv_path / bin_dir / "pyre{}".format(exe)
     config = tests_to_run[setup_py_path]
 
     steps = (
@@ -522,6 +538,13 @@ async def _test_steps_runner(
             bool("run_pylint" in config and config["run_pylint"]),
             _generate_pylint_cmd(setup_py_path.parent, pylint_exe, config),
             "Running pylint for {}".format(setup_py_path),
+            config["test_suite_timeout"],
+        ),
+        step(
+            StepName.pyre_run,
+            bool("run_pyre" in config and config["run_pyre"] and not WINDOWS),
+            _generate_pyre_cmd(setup_py_path.parent, pyre_exe, config),
+            "Running pyre for {}".format(setup_py_path),
             config["test_suite_timeout"],
         ),
     )

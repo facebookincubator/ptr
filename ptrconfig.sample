@@ -12,4 +12,5 @@ venv_pkgs =
   mypy
   pip
   pylint
+  pyre-check
   setuptools

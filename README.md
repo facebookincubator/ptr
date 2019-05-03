@@ -111,7 +111,7 @@ ptr_params = {
 
 This is per project in your repository and if exists is preferred over `setup.py`.
 
-Please refer to [`setup.cfg.sample`](http://github.com/facebookincubator/ptr/blob/master/ptrconfig.sample) for the options available + format.
+Please refer to [`setup.cfg.sample`](http://github.com/facebookincubator/ptr/blob/master/setup.cfg.sample) for the options available + format.
 
 ### mypy Specifics
 
@@ -122,19 +122,7 @@ To have `ptr` run mypy using you config:
 - OR add **[mypy]** section to your `setup.cfg`
 
 `mypy` Configuration Documentation can be found [here](https://mypy.readthedocs.io/en/stable/config_file.html)
-
-```
-[mypy]
-python_version = 3.5
-check_untyped_defs = True
-disallow_incomplete_defs = True
-disallow_untyped_decorators = True
-disallow_untyped_defs = True
-no_implicit_optional = True
-show_error_context = True
-warn_unused_ignores = True
-warn_return_any = True
-```
+- An example `setup.cfg` can be seen [here](http://github.com/facebookincubator/ptr/blob/master/mypy.ini).
 
 # Example Output 📝
 
@@ -150,6 +138,9 @@ Here is what you want to see in your CI logs!
 [2019-02-06 21:52:00,726] INFO: Running /Users/cooper/repos/ptr/ptr_tests.py tests via coverage (ptr.py:417)
 [2019-02-06 21:52:04,153] INFO: Analyzing coverage report for /Users/cooper/repos/ptr/setup.py (ptr.py:417)
 [2019-02-06 21:52:04,368] INFO: Running mypy for /Users/cooper/repos/ptr/setup.py (ptr.py:417)
+[2019-05-03 14:54:09,915] INFO: Running flake8 for /Users/cooper/repos/ptr/setup.py (ptr.py:417)
+[2019-05-03 14:54:10,422] INFO: Running pylint for /Users/cooper/repos/ptr/setup.py (ptr.py:417)
+[2019-05-03 14:54:14,020] INFO: Running pyre for /Users/cooper/repos/ptr/setup.py (ptr.py:417)
 [2019-02-06 21:52:07,733] INFO: /Users/cooper/repos/ptr/setup.py has passed all configured tests (ptr.py:509)
 -- Summary (total time 22s):
 
@@ -181,7 +172,7 @@ Here are some examples of runs failing. Any "step" can fail. All output is predo
 
 -- Failure Output --
 
-/Users/cooper/repos/ptr/setup.py:
+/Users/cooper/repos/ptr/setup.py (failed 'tests_run' step):
 ...F....................
 ======================================================================
 FAIL: test_config (__main__.TestPtr)
@@ -197,7 +188,7 @@ Ran 24 tests in 3.221s
 FAILED (failures=1)
 ```
 
-### Coverage Failure
+### coverage
 
 ```
 [2019-02-06 21:55:42,947] INFO: Starting ptr.py (ptr.py:782)
@@ -215,7 +206,7 @@ FAILED (failures=1)
 
 -- Failure Output --
 
-/Users/cooper/repos/ptr/setup.py:
+/Users/cooper/repos/ptr/setup.py (failed 'analyze_coverage' step):
 The following files did not meet coverage requirements:
   ptr.py: 84 < 99 - Missing: 146-147, 175, 209, 245, 269, 288-291, 334-336, 414-415, 425-446, 466, 497, 506, 541-543, 562, 611-614, 639-688
 ```
@@ -240,7 +231,7 @@ The following files did not meet coverage requirements:
 
 -- Failure Output --
 
-/Users/cooper/repos/ptr/setup.py:
+/Users/cooper/repos/ptr/setup.py (failed 'black_run' step):
 would reformat /Users/cooper/repos/ptr/ptr.py
 All done! 💥 💔 💥
 1 file would be reformatted, 4 files would be left unchanged.
@@ -265,11 +256,43 @@ All done! 💥 💔 💥
 
 -- Failure Output --
 
-/Users/cooper/repos/ptr/setup.py:
+/Users/cooper/repos/ptr/setup.py (failed 'mypy_run' step):
 /Users/cooper/repos/ptr/ptr.py: note: In function "_write_stats_file":
 /Users/cooper/repos/ptr/ptr.py:179: error: Argument 1 to "open" has incompatible type "Path"; expected "Union[str, bytes, int]"
 /Users/cooper/repos/ptr/ptr.py: note: In function "run_tests":
 /Users/cooper/repos/ptr/ptr.py:700: error: Argument 1 to "_write_stats_file" has incompatible type "str"; expected "Path"
+```
+
+### pyre
+
+```
+cooper-mbp1:ptr cooper$ /tmp/tp/bin/ptr --venv /var/folders/tc/hbwxh76j1hn6gqjd2n2sjn4j9k1glp/T/ptr_venv_49117
+[2019-05-03 14:51:43,623] INFO: Starting /tmp/tp/bin/ptr (ptr.py:1023)
+[2019-05-03 14:51:43,657] INFO: Installing /Users/cooper/repos/ptr/setup.py + deps (ptr.py:565)
+[2019-05-03 14:51:44,840] INFO: Running ptr_tests tests via coverage (ptr.py:565)
+[2019-05-03 14:51:47,361] INFO: Analyzing coverage report for /Users/cooper/repos/ptr/setup.py (ptr.py:565)
+[2019-05-03 14:51:47,559] INFO: Running mypy for /Users/cooper/repos/ptr/setup.py (ptr.py:565)
+[2019-05-03 14:51:47,827] INFO: Running black for /Users/cooper/repos/ptr/setup.py (ptr.py:565)
+[2019-05-03 14:51:47,996] INFO: Running flake8 for /Users/cooper/repos/ptr/setup.py (ptr.py:565)
+[2019-05-03 14:51:48,566] INFO: Running pylint for /Users/cooper/repos/ptr/setup.py (ptr.py:565)
+[2019-05-03 14:51:52,301] INFO: Running pyre for /Users/cooper/repos/ptr/setup.py (ptr.py:565)
+[2019-05-03 14:51:54,983] INFO: /Users/cooper/repos/ptr/setup.py has passed all configured tests (ptr.py:668)
+-- Summary (total time 11s):
+
+✅ PASS: 1
+❌ FAIL: 0
+⌛️ TIMEOUT: 0
+💩 TOTAL: 1
+
+-- 1 / 1 (100%) `setup.py`'s have `ptr` tests running
+
+-- Failure Output --
+
+/Users/cooper/repos/ptr/setup.py (failed 'pyre_run' step):
+2019-05-03 14:54:14,173 INFO No binary specified, looking for `pyre.bin` in PATH
+2019-05-03 14:54:14,174 INFO Found: `/var/folders/tc/hbwxh76j1hn6gqjd2n2sjn4j9k1glp/T/ptr_venv_49117/bin/pyre.bin`
+... *(truncated)* ...
+ptr.py:602:25 Undefined name [18]: Global name `stdout` is not defined, or there is at least one control flow path that doesn't define `stdout`.
 ```
 
 # FAQ ⁉️
@@ -294,6 +317,11 @@ All done! 💥 💔 💥
   - [bandersnatch](https://pypi.org/project/bandersnatch): Can do selected or FULL PyPI mirrors. The maintainer is also devilishly good looking.
   - [devpi](https://pypi.org/project/devpi/): Can be ran and used to *proxy* packages locally when pip goes out to grab your dependencies.
 - Please ensure you're using the `-k` or `--venv` option to no recreate a virtualenv each run when debugging your tests!
+
+### Q. Why is ptr not able to run `pyre` on Windows?
+
+- `pyre` (pyre-check on PyPI) does not ship a Windows wheel with the ocaml pyre.bin
+
 
 # Contact or join the ptr community 💬
 
