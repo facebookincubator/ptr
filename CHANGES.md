@@ -2,6 +2,16 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.5.3
+Codename: **Cleveland**
+
+*🇺🇸 @cooperlees + @jreese are at PyCon US in Cleveland, OH 🦅*
+
+- Print step name in failue output - Issue: #31
+- Add in `pyre` Type Checking step support - Issue: #38 + #40
+
+**Known Bug:** `black.exe` does not run in Windows 3.7 - **disabled** by *default* on Python 3.7 on Windows
+
 ### 2019.3.5
 Codename: **Jaipur**
 
