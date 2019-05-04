@@ -81,7 +81,7 @@ PIP_CONF_TEMPLATE = """\
 index-url = {}
 timeout = {}"""
 # Windows venv + pip are super slow
-VENV_TIMEOUT = 120 if WINDOWS else 30
+VENV_TIMEOUT = 120 if WINDOWS or MAC else 30
 
 
 class StepName(Enum):
