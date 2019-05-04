@@ -67,7 +67,15 @@ def integration_test() -> int:
     print("Running `ptr` integration tests (aka run itself)", file=stderr)
 
     stats_file = Path(gettempdir()) / "ptr_ci_stats"
-    ci_cmd = ["python", "ptr.py", "-d", "--print-cov", "--stats-file", str(stats_file)]
+    ci_cmd = [
+        "python",
+        "ptr.py",
+        "-d",
+        "--force-black",
+        "--print-cov",
+        "--stats-file",
+        str(stats_file),
+    ]
     if "VIRTUAL_ENV" in environ:
         ci_cmd.extend(["--venv", environ["VIRTUAL_ENV"]])
 
