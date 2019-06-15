@@ -2,6 +2,14 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.6.15
+Codename: **Concord**
+
+* 🛫 @cooperlees is playing Aussie Football @ Concord, CA today 🏈 *
+
+- Add ability to `disable` test suites and add a `--run-disabled` option to force the run - Issue: #46
+- Azure CI now runs on Mac and Windows again
+
 ### 2019.5.3
 Codename: **Cleveland**
 
