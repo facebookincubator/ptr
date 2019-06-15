@@ -71,8 +71,8 @@ def integration_test() -> int:
         "python",
         "ptr.py",
         "-d",
-        "--force",
         "--print-cov",
+        "--run-disabled",
         "--stats-file",
         str(stats_file),
     ]
