@@ -52,24 +52,36 @@ For **faster runs** when testing, it is recommended to reuse a Virtual Environme
 ### Help Output 🙋‍♀️ 🙋‍♂️
 
 ```
-usage: ptr.py [-h] [-a ATONCE] [-b BASE_DIR] [-d] [-k] [-m MIRROR]
-              [--progress-interval PROGRESS_INTERVAL] [--venv VENV]
+usage: ptr [-h] [-a ATONCE] [-b BASE_DIR] [-d] [--force-black] [-k]
+           [-m MIRROR] [--print-cov] [--progress-interval PROGRESS_INTERVAL]
+           [--run-disabled] [--stats-file STATS_FILE] [--venv VENV]
+           [--venv-timeout VENV_TIMEOUT]
+
 optional arguments:
   -h, --help            show this help message and exit
   -a ATONCE, --atonce ATONCE
-                        How many tests to run at once [Default: 24]
+                        How many tests to run at once [Default: 6]
   -b BASE_DIR, --base-dir BASE_DIR
                         Path to recursively look for setup.py files [Default:
-                        /home/cooper/repos/l33t]
+                        /Users/cooper/repos/ptr]
   -d, --debug           Verbose debug output
+  --force-black         Ensure black runs if enabled in config
   -k, --keep-venv       Do not remove created venv
   -m MIRROR, --mirror MIRROR
                         URL for pip to use for Simple API [Default:
                         https://pypi.org/simple/]
+  --print-cov           Print modules coverage report
   --progress-interval PROGRESS_INTERVAL
                         Seconds between status update on test running
                         [Default: Disabled]
+  --run-disabled        Force any disabled tests suites to run
+  --stats-file STATS_FILE
+                        JSON statistics file [Default: /var/folders/tc/hbwxh76
+                        j1hn6gqjd2n2sjn4j9k1glp/T/ptr_stats_32844]
   --venv VENV           Path to venv to reuse
+  --venv-timeout VENV_TIMEOUT
+                        Timeout in seconds for venv creation + deps install
+                        [Default: 120]
 ```
 
 ## Configuration 🧰
