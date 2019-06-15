@@ -295,7 +295,9 @@ def _generate_pyre_cmd(
     return (str(pyre_exe), "--source-directory", str(module_dir), "check")
 
 
-def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict]:
+def _get_test_modules(
+    base_path: Path, stats: Dict[str, int], force: bool
+) -> Dict[Path, Dict]:
     get_tests_start_time = time()
     all_setup_pys = find_setup_pys(
         base_path,
@@ -306,11 +308,16 @@ def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict
     stats["total.setup_pys"] = len(all_setup_pys)
 
     test_modules = {}  # type: Dict[Path, Dict]
-    for setup_py in all_setup_pys:
+    for setup_py in all_setup_pys:  # pylint: disable=R1702
+        disabled_err_msg = "Not running {} as it's ptr is disabled".format(setup_py)
         # If a setup.cfg exists lets prefer it, if there is a [ptr] section
         ptr_params = parse_setup_cfg(setup_py)
         if ptr_params:
-            test_modules[setup_py] = ptr_params
+            if ptr_params.get("disabled", False) and not force:
+                LOG.info(disabled_err_msg)
+                stats["total.disabled"] += 1
+            else:
+                test_modules[setup_py] = ptr_params
             continue
 
         with setup_py.open("r", encoding="utf8") as sp:
@@ -325,7 +332,11 @@ def _get_test_modules(base_path: Path, stats: Dict[str, int]) -> Dict[Path, Dict
                         LOG.debug("Found ptr_params in {}".format(setup_py))
                         ptr_params = ast.literal_eval(node.value)
                         if "test_suite" in ptr_params:
-                            test_modules[setup_py] = ptr_params
+                            if ptr_params.get("disabled", False) and not force:
+                                LOG.info(disabled_err_msg)
+                                stats["total.disabled"] += 1
+                            else:
+                                test_modules[setup_py] = ptr_params
                         else:
                             LOG.info(
                                 "{} does not have a suite. Nothing to run".format(
@@ -780,7 +791,7 @@ def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
         if key.startswith(req_cov_key_strip):
             key = key.strip(req_cov_key_strip)
             ptr_params["required_coverage"][key] = int(value)
-        elif key.startswith("run_"):
+        elif key.startswith("run_") or key == "disabled":
             ptr_params[key] = cp.getboolean("ptr", key)
         elif key == "test_suite_timeout":
             ptr_params[key] = cp.getint("ptr", key)
@@ -816,10 +827,11 @@ def print_test_results(
     # TODO: Hardcode some workaround to ensure Windows always prints UTF8
     # https://github.com/facebookincubator/ptr/issues/34
     print(
-        "✅ PASS: {}\n❌ FAIL: {}\n⌛️ TIMEOUT: {}\n💩 TOTAL: {}\n".format(
+        "✅ PASS: {}\n❌ FAIL: {}\n️⌛ TIMEOUT: {}\n🔒 DISABLED: {}\n💩 TOTAL: {}\n".format(
             stats["total.passes"],
             stats["total.fails"],
             stats["total.timeouts"],
+            stats["total.disabled"],
             stats["total.test_suites"],
         )
     )
@@ -921,12 +933,13 @@ async def async_main(
     venv: str,
     venv_keep: bool,
     print_cov: bool,
+    force: bool,
     force_black: bool,
     stats_file: str,
     venv_timeout: float,
 ) -> int:
     stats = defaultdict(int)  # type: Dict[str, int]
-    tests_to_run = _get_test_modules(base_path, stats)
+    tests_to_run = _get_test_modules(base_path, stats, force)
     if not tests_to_run:
         LOG.error(
             "{} has no setup.py files with unit tests defined. Exiting".format(
@@ -978,6 +991,9 @@ def main() -> None:
     )
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Verbose debug output"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force any disabled tests suites to run"
     )
     parser.add_argument(
         "--force-black",
@@ -1033,6 +1049,7 @@ def main() -> None:
                     args.venv,
                     args.keep_venv,
                     args.print_cov,
+                    args.force,
                     args.force_black,
                     args.stats_file,
                     args.venv_timeout,
