@@ -12,6 +12,8 @@ from setuptools import setup
 
 # Specific Python Test Runner (ptr) params for Unit Testing Enforcement
 ptr_params = {
+    # Disable auto running if found - Requires --run-disabled to run
+    "disabled": True,
     # Where mypy will run to type check your program
     "entry_point_module": "ptr",
     # Base Unittest File

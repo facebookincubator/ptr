@@ -23,7 +23,9 @@ class FakeEventLoop:
         return 0
 
 
+# Disabled is set as we --run-disabled the run in CI
 EXPECTED_TEST_PARAMS = {
+    "disabled": True,
     "entry_point_module": "ptr",
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
@@ -187,8 +189,10 @@ setup(
 )
 """
 
+# Disabled is set as we --run-disabled the run in CI
 SAMPLE_SETUP_CFG = """\
 [ptr]
+disabled = true
 entry_point_module = ptr
 test_suite = ptr_tests
 test_suite_timeout = 120

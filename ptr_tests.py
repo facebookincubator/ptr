@@ -130,7 +130,7 @@ class TestPtr(unittest.TestCase):
     @patch("ptr.run_tests", async_none)
     @patch("ptr._get_test_modules")
     def test_async_main(self, mock_gtm: Mock) -> None:
-        args = [1, Path("/"), "mirror", 1, "venv", True, True, False, "stats", 30]
+        args = [1, Path("/"), "mirror", 1, "venv", True, True, True, False, "stats", 30]
         mock_gtm.return_value = False
         self.assertEqual(
             self.loop.run_until_complete(ptr.async_main(*args)), 1  # pyre-ignore
@@ -283,7 +283,7 @@ class TestPtr(unittest.TestCase):
     def test_get_test_modules(self) -> None:
         base_path = Path(__file__).parent
         stats = defaultdict(int)  # type: Dict[str, int]
-        test_modules = ptr._get_test_modules(base_path, stats)
+        test_modules = ptr._get_test_modules(base_path, stats, True)
         self.assertEqual(
             test_modules[base_path / "setup.py"],
             ptr_tests_fixtures.EXPECTED_TEST_PARAMS,
