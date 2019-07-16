@@ -130,7 +130,20 @@ class TestPtr(unittest.TestCase):
     @patch("ptr.run_tests", async_none)
     @patch("ptr._get_test_modules")
     def test_async_main(self, mock_gtm: Mock) -> None:
-        args = [1, Path("/"), "mirror", 1, "venv", True, True, True, False, "stats", 30]
+        args = [
+            1,
+            Path("/"),
+            "mirror",
+            1,
+            "venv",
+            True,
+            True,
+            False,
+            True,
+            False,
+            "stats",
+            30,
+        ]
         mock_gtm.return_value = False
         self.assertEqual(
             self.loop.run_until_complete(ptr.async_main(*args)), 1  # pyre-ignore
@@ -156,7 +169,7 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(
             sc["ptr"].get("pypi_url", ""), expected_pypi_url  # pyre-ignore
         )
-        self.assertEqual(len(sc["ptr"].get("venv_pkgs", "").split()), 8)  # pyre-ignore
+        self.assertEqual(len(sc["ptr"].get("venv_pkgs", "").split()), 8)
 
     @patch("ptr._gen_check_output", async_none)  # noqa
     @patch("ptr._set_pip_mirror")  # noqa
@@ -280,16 +293,20 @@ class TestPtr(unittest.TestCase):
             lib_path.mkdir()
             self.assertIsNone(ptr._get_site_packages_path(lib_path.parent))
 
-    def test_get_test_modules(self) -> None:
+    @patch("ptr.print")  # noqa
+    def test_get_test_modules(self, mock_print: Mock) -> None:
         base_path = Path(__file__).parent
         stats = defaultdict(int)  # type: Dict[str, int]
-        test_modules = ptr._get_test_modules(base_path, stats, True)
+        test_modules = ptr._get_test_modules(base_path, stats, True, True)
         self.assertEqual(
             test_modules[base_path / "setup.py"],
             ptr_tests_fixtures.EXPECTED_TEST_PARAMS,
         )
-        self.assertEqual(stats["total.setup_pys"], 1)
+        self.assertEqual(stats["total.non_ptr_setup_pys"], 0)
         self.assertEqual(stats["total.ptr_setup_pys"], 1)
+        self.assertEqual(stats["total.setup_pys"], 1)
+        # Make sure we don't run print even tho we set the option to True
+        self.assertFalse(mock_print.called)
 
     def test_gen_output(self) -> None:
         test_cmd = ("echo.exe", "''") if ptr.WINDOWS else ("/bin/echo",)
@@ -334,6 +351,13 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(
             ptr.parse_setup_cfg(setup_py), ptr_tests_fixtures.EXPECTED_TEST_PARAMS
         )
+
+    @patch("ptr.print")  # noqa
+    def test_print_non_configured_modules(self, mock_print: Mock) -> None:
+        modules = [Path("/tmp/foo/setup.py"), Path("/tmp/bla/setup.py")]
+        # TODO: Workout why pylint things this function does not exist
+        ptr.print_non_configured_modules(modules)  # pylint: disable=E1101
+        self.assertEqual(3, mock_print.call_count)
 
     @patch("ptr.print")  # noqa
     def test_print_test_results(self, mock_print: Mock) -> None:
