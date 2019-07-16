@@ -29,7 +29,7 @@ EXPECTED_TEST_PARAMS = {
     "entry_point_module": "ptr",
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
-    "required_coverage": {"ptr.py": 84, "TOTAL": 89},
+    "required_coverage": {"ptr.py": 83, "TOTAL": 89},
     "run_black": True,
     "run_mypy": True,
     "run_flake8": True,
@@ -196,7 +196,7 @@ disabled = true
 entry_point_module = ptr
 test_suite = ptr_tests
 test_suite_timeout = 120
-required_coverage_ptr.py = 84
+required_coverage_ptr.py = 83
 required_coverage_TOTAL = 89
 run_black = true
 run_mypy = true

@@ -296,7 +296,10 @@ def _generate_pyre_cmd(
 
 
 def _get_test_modules(
-    base_path: Path, stats: Dict[str, int], run_disabled: bool
+    base_path: Path,
+    stats: Dict[str, int],
+    run_disabled: bool,
+    print_non_configured: bool,
 ) -> Dict[Path, Dict]:
     get_tests_start_time = time()
     all_setup_pys = find_setup_pys(
@@ -307,6 +310,7 @@ def _get_test_modules(
     )
     stats["total.setup_pys"] = len(all_setup_pys)
 
+    non_configured_modules = []  # type: List[Path]
     test_modules = {}  # type: Dict[Path, Dict]
     for setup_py in all_setup_pys:  # pylint: disable=R1702
         disabled_err_msg = "Not running {} as ptr is disabled via config".format(
@@ -345,7 +349,13 @@ def _get_test_modules(
                                     setup_py
                                 )
                             )
+        if setup_py not in test_modules:
+            non_configured_modules.append(setup_py)
 
+    if print_non_configured and non_configured_modules:
+        print_non_configured_modules(non_configured_modules)
+
+    stats["total.non_ptr_setup_pys"] = len(non_configured_modules)
     stats["total.ptr_setup_pys"] = len(test_modules)
     stats["runtime.parse_setup_pys"] = int(time() - get_tests_start_time)
     return test_modules
@@ -743,32 +753,35 @@ def find_py_files(py_files: Set[str], base_dir: Path) -> None:
         find_py_files(py_files, directory)
 
 
+def _recursive_find_files(
+    files: Set[Path], base_dir: Path, exclude_patterns: Set[str], follow_symlinks: bool
+) -> None:
+    dirs = [d for d in base_dir.iterdir() if d.is_dir()]
+    files.update(
+        {x for x in base_dir.iterdir() if x.is_file() and x.name == "setup.py"}
+    )
+    for directory in dirs:
+        if not follow_symlinks and directory.is_symlink():
+            continue
+
+        skip_dir = False
+        for exclude_pattern in exclude_patterns:
+            if directory.match(exclude_pattern):
+                skip_dir = True
+                LOG.debug(
+                    "Skipping {} due to exclude pattern {}".format(
+                        directory, exclude_pattern
+                    )
+                )
+        if not skip_dir:
+            _recursive_find_files(files, directory, exclude_patterns, follow_symlinks)
+
+
 def find_setup_pys(
     base_path: Path, exclude_patterns: Set[str], follow_symlinks: bool = False
 ) -> Set[Path]:
-    def _recursive_find_files(files: Set[Path], base_dir: Path) -> None:
-        dirs = [d for d in base_dir.iterdir() if d.is_dir()]
-        files.update(
-            {x for x in base_dir.iterdir() if x.is_file() and x.name == "setup.py"}
-        )
-        for directory in dirs:
-            if not follow_symlinks and directory.is_symlink():
-                continue
-
-            skip_dir = False
-            for exclude_pattern in exclude_patterns:
-                if directory.match(exclude_pattern):
-                    skip_dir = True
-                    LOG.debug(
-                        "Skipping {} due to exclude pattern {}".format(
-                            directory, exclude_pattern
-                        )
-                    )
-            if not skip_dir:
-                _recursive_find_files(files, directory)
-
     setup_pys = set()  # type: Set[Path]
-    _recursive_find_files(setup_pys, base_path)
+    _recursive_find_files(setup_pys, base_path, exclude_patterns, follow_symlinks)
     return setup_pys
 
 
@@ -801,6 +814,12 @@ def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
             ptr_params[key] = value
 
     return ptr_params
+
+
+def print_non_configured_modules(modules: List[Path]) -> None:
+    print("== {} non ptr configured modules ==".format(len(modules)))
+    for module in sorted(modules):
+        print(" - {}".format(str(module)))
 
 
 def print_test_results(
@@ -935,13 +954,16 @@ async def async_main(
     venv: str,
     venv_keep: bool,
     print_cov: bool,
+    print_non_configured: bool,
     run_disabled: bool,
     force_black: bool,
     stats_file: str,
     venv_timeout: float,
 ) -> int:
     stats = defaultdict(int)  # type: Dict[str, int]
-    tests_to_run = _get_test_modules(base_path, stats, run_disabled)
+    tests_to_run = _get_test_modules(
+        base_path, stats, run_disabled, print_non_configured
+    )
     if not tests_to_run:
         LOG.error(
             "{} has no setup.py files with unit tests defined. Exiting".format(
@@ -949,6 +971,9 @@ async def async_main(
             )
         )
         return 1
+
+    if print_non_configured:
+        return 0
 
     try:
         venv_path = Path(venv)  # type: Optional[Path]
@@ -1014,6 +1039,11 @@ def main() -> None:
         "--print-cov", action="store_true", help="Print modules coverage report"
     )
     parser.add_argument(
+        "--print-non-configured",
+        action="store_true",
+        help="Print modules not configured to run ptr",
+    )
+    parser.add_argument(
         "--progress-interval",
         default=0,
         type=float,
@@ -1053,6 +1083,7 @@ def main() -> None:
                     args.venv,
                     args.keep_venv,
                     args.print_cov,
+                    args.print_non_configured,
                     args.run_disabled,
                     args.force_black,
                     args.stats_file,
