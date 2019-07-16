@@ -2,10 +2,17 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.7.16
+Codename: **California City**
+
+*An over developed desert with infrastructure and little [people](https://en.wikipedia.org/wiki/California_City,_California)*
+
+- Add `--print-non-configured` to find non `ptr` modules in repos - Issue: #50
+
 ### 2019.6.15
 Codename: **Concord**
 
-* 🛫 @cooperlees is playing Aussie Football @ Concord, CA today 🏈 *
+*🛫 @cooperlees is playing Aussie Football @ Concord, CA today 🏈*
 
 - Add ability to `disable` test suites and add a `--run-disabled` option to force the run - Issue: #46
 - Azure CI now runs on Mac and Windows again
