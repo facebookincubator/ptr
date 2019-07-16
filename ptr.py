@@ -998,7 +998,7 @@ async def async_main(
     )
 
 
-def main() -> int:
+def main() -> None:
     default_stats_file = Path(gettempdir()) / "ptr_stats_{}".format(getpid())
     parser = argparse.ArgumentParser()
     parser.add_argument(
