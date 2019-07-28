@@ -295,6 +295,27 @@ def _generate_pyre_cmd(
     return (str(pyre_exe), "--source-directory", str(module_dir), "check")
 
 
+def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
+    with setup_py.open("r", encoding="utf8") as sp:
+        setup_tree = ast.parse(sp.read())
+
+    LOG.debug("AST visiting {}".format(setup_py))
+    for node in ast.walk(setup_tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                # mypy error: "expr" has no attribute "id"
+                if target.id == "ptr_params":  # type: ignore
+                    LOG.debug("Found ptr_params in {}".format(setup_py))
+                    ptr_params = ast.literal_eval(node.value)
+                    if "test_suite" in ptr_params:
+                        return ptr_params
+                    LOG.info(
+                        "{} does not have a suite. Nothing to run".format(setup_py)
+                    )
+                    break
+    return {}
+
+
 def _get_test_modules(
     base_path: Path,
     stats: Dict[str, int],
@@ -312,43 +333,22 @@ def _get_test_modules(
 
     non_configured_modules = []  # type: List[Path]
     test_modules = {}  # type: Dict[Path, Dict]
-    for setup_py in all_setup_pys:  # pylint: disable=R1702
+    for setup_py in all_setup_pys:
         disabled_err_msg = "Not running {} as ptr is disabled via config".format(
             setup_py
         )
         # If a setup.cfg exists lets prefer it, if there is a [ptr] section
         ptr_params = parse_setup_cfg(setup_py)
+        if not ptr_params:
+            ptr_params = _parse_setup_params(setup_py)
+
         if ptr_params:
             if ptr_params.get("disabled", False) and not run_disabled:
                 LOG.info(disabled_err_msg)
                 stats["total.disabled"] += 1
             else:
                 test_modules[setup_py] = ptr_params
-            continue
 
-        with setup_py.open("r", encoding="utf8") as sp:
-            setup_tree = ast.parse(sp.read())
-
-        LOG.debug("AST visiting {}".format(setup_py))
-        for node in ast.walk(setup_tree):
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    # mypy error: "expr" has no attribute "id"
-                    if target.id == "ptr_params":  # type: ignore
-                        LOG.debug("Found ptr_params in {}".format(setup_py))
-                        ptr_params = ast.literal_eval(node.value)
-                        if "test_suite" in ptr_params:
-                            if ptr_params.get("disabled", False) and not run_disabled:
-                                LOG.info(disabled_err_msg)
-                                stats["total.disabled"] += 1
-                            else:
-                                test_modules[setup_py] = ptr_params
-                        else:
-                            LOG.info(
-                                "{} does not have a suite. Nothing to run".format(
-                                    setup_py
-                                )
-                            )
         if setup_py not in test_modules:
             non_configured_modules.append(setup_py)
 
