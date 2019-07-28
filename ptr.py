@@ -306,7 +306,7 @@ def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
                 # mypy error: "expr" has no attribute "id"
                 if target.id == "ptr_params":  # type: ignore
                     LOG.debug("Found ptr_params in {}".format(setup_py))
-                    ptr_params = ast.literal_eval(node.value)
+                    ptr_params = dict(ast.literal_eval(node.value))
                     if "test_suite" in ptr_params:
                         return ptr_params
                     LOG.info(
