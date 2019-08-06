@@ -1062,6 +1062,7 @@ def main() -> None:
     parser.add_argument("--venv", help="Path to venv to reuse")
     parser.add_argument(
         "--venv-timeout",
+        type=int,
         default=VENV_TIMEOUT,
         help="Timeout in seconds for venv creation + deps install [Default: {}]".format(
             VENV_TIMEOUT
