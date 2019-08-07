@@ -13,7 +13,6 @@ from os import environ
 from pathlib import Path
 from shutil import rmtree
 from subprocess import CalledProcessError
-from sys import version_info
 from tempfile import TemporaryDirectory, gettempdir
 from typing import (  # noqa: F401 # pylint: disable=unused-import
     Any,
