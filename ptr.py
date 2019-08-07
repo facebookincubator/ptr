@@ -303,8 +303,11 @@ def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
     for node in ast.walk(setup_tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                # mypy error: "expr" has no attribute "id"
-                if target.id == "ptr_params":  # type: ignore
+                target_id = getattr(target, "id", None)
+                if not target_id:
+                    continue
+
+                if target_id == "ptr_params":
                     LOG.debug("Found ptr_params in {}".format(setup_py))
                     ptr_params = dict(ast.literal_eval(node.value))
                     if "test_suite" in ptr_params:
