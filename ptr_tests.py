@@ -440,14 +440,11 @@ class TestPtr(unittest.TestCase):
                 (None, 6) if ptr.WINDOWS else (None, 7),
             )
 
-            if ptr.WINDOWS and version_info >= (3, 7):
-                # No pyre + black
-                expected = (None, 6)
-            elif ptr.WINDOWS:
+            if ptr.WINDOWS:
                 # No pyre
                 expected = (None, 7)
             else:
-                # Running all steps on everything else
+                # Running all steps on all other platforms
                 expected = (None, 8)
 
             fake_tests_to_run = {fake_setup_py: ptr_tests_fixtures.EXPECTED_TEST_PARAMS}
