@@ -73,6 +73,7 @@ def integration_test() -> int:
         "-d",
         "--print-cov",
         "--run-disabled",
+        "--error-on-warnings",
         "--stats-file",
         str(stats_file),
     ]

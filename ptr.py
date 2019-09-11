@@ -432,6 +432,7 @@ async def _progress_reporter(
 
 def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
     build_environ = environ.copy()
+
     if not build_base_path or not build_base_path.exists():
         if build_base_path:
             LOG.error(
@@ -477,13 +478,14 @@ def _set_pip_mirror(
         print(PIP_CONF_TEMPLATE.format(mirror, timeout), file=pcfp)
 
 
-async def _test_steps_runner(
+async def _test_steps_runner(  # pylint: disable=R0914
     test_run_start_time: int,
     tests_to_run: Dict[Path, Dict],
     setup_py_path: Path,
     venv_path: Path,
     env: Dict,
     stats: Dict[str, int],
+    error_on_warnings: bool,
     print_cov: bool = False,
 ) -> Tuple[Optional[test_result], int]:
     bin_dir = "Scripts" if WINDOWS else "bin"
@@ -579,8 +581,15 @@ async def _test_steps_runner(
         try:
             if a_step.cmds:
                 LOG.debug("CMD: {}".format(" ".join(a_step.cmds)))
+
+                # If we're running tests and we want warnings to be errors
+                step_env = env
+                if a_step.step_name == StepName.tests_run and error_on_warnings:
+                    step_env = env.copy()
+                    step_env["PYTHONWARNINGS"] = "error"
+
                 stdout, _stderr = await _gen_check_output(
-                    a_step.cmds, a_step.timeout, env=env, cwd=setup_py_path.parent
+                    a_step.cmds, a_step.timeout, env=step_env, cwd=setup_py_path.parent
                 )
             else:
                 LOG.debug("Skipping running a cmd for {} step".format(a_step))
@@ -637,6 +646,7 @@ async def _test_runner(
     venv_path: Path,
     print_cov: bool,
     stats: Dict[str, int],
+    error_on_warnings: bool,
     idx: int,
 ) -> None:
 
@@ -668,6 +678,7 @@ async def _test_runner(
             env,
             stats,
             print_cov,
+            error_on_warnings,
         )
         total_success_runtime = int(time() - test_run_start_time)
         if test_fail_result:
@@ -871,6 +882,7 @@ async def run_tests(
     stats: Dict[str, int],
     stats_file: str,
     venv_timeout: float,
+    error_on_warnings: bool,
 ) -> int:
     tests_start_time = time()
 
@@ -896,7 +908,14 @@ async def run_tests(
     test_results = []  # type: List[test_result]
     consumers = [
         _test_runner(
-            queue, tests_to_run, test_results, venv_path, print_cov, stats, i + 1
+            queue,
+            tests_to_run,
+            test_results,
+            venv_path,
+            print_cov,
+            stats,
+            error_on_warnings,
+            i + 1,
         )
         for i in range(atonce)
     ]
@@ -936,6 +955,7 @@ async def async_main(
     run_disabled: bool,
     stats_file: str,
     venv_timeout: float,
+    error_on_warnings: bool,
 ) -> int:
     stats = defaultdict(int)  # type: Dict[str, int]
     tests_to_run = _get_test_modules(
@@ -971,6 +991,7 @@ async def async_main(
         stats,
         stats_file,
         venv_timeout,
+        error_on_warnings,
     )
 
 
@@ -994,6 +1015,12 @@ def main() -> None:
     )
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Verbose debug output"
+    )
+    parser.add_argument(
+        "-e",
+        "--error-on-warnings",
+        action="store_true",
+        help="Have Warnings raise Errors",
     )
     parser.add_argument(
         "-k", "--keep-venv", action="store_true", help="Do not remove created venv"
@@ -1059,6 +1086,7 @@ def main() -> None:
                     args.run_disabled,
                     args.stats_file,
                     args.venv_timeout,
+                    args.error_on_warnings,
                 )
             )
         )
