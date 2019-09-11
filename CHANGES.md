@@ -2,6 +2,15 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+
+### 2019.9.11
+
+Codename: **Rathbone Square**
+
+*@cooperlees is releasing this release from FB London Office*
+
+- Add CLI option to enable erroring on all [warnings](https://docs.python.org/3/library/warnings.html) - Issue: #57
+
 ### 2019.8.7
 
 Codename: **Ellicott City**
