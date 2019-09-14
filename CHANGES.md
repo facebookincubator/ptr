@@ -2,6 +2,11 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.9.11
+
+Codename: **Clowntown 🤡**
+
+- Fix bad bool passing for `--print-cov` + `--error-on-warnings`
 
 ### 2019.9.11
 

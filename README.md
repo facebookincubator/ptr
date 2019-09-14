@@ -51,11 +51,12 @@ For **faster runs** when testing, it is recommended to reuse a Virtual Environme
 
 ### Help Output 🙋‍♀️ 🙋‍♂️
 
-```
-usage: ptr [-h] [-a ATONCE] [-b BASE_DIR] [-d] [--force-black] [-k]
-           [-m MIRROR] [--print-cov] [--progress-interval PROGRESS_INTERVAL]
-           [--run-disabled] [--stats-file STATS_FILE] [--venv VENV]
-           [--venv-timeout VENV_TIMEOUT]
+```shell
+usage: ptr.py [-h] [-a ATONCE] [-b BASE_DIR] [-d] [-e] [-k] [-m MIRROR]
+              [--print-cov] [--print-non-configured]
+              [--progress-interval PROGRESS_INTERVAL] [--run-disabled]
+              [--stats-file STATS_FILE] [--venv VENV]
+              [--venv-timeout VENV_TIMEOUT]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -65,19 +66,22 @@ optional arguments:
                         Path to recursively look for setup.py files [Default:
                         /Users/cooper/repos/ptr]
   -d, --debug           Verbose debug output
-  --force-black         Ensure black runs if enabled in config
+  -e, --error-on-warnings
+                        Have Python warnings raise DeprecationWarning
   -k, --keep-venv       Do not remove created venv
   -m MIRROR, --mirror MIRROR
                         URL for pip to use for Simple API [Default:
                         https://pypi.org/simple/]
   --print-cov           Print modules coverage report
+  --print-non-configured
+                        Print modules not configured to run ptr
   --progress-interval PROGRESS_INTERVAL
                         Seconds between status update on test running
                         [Default: Disabled]
   --run-disabled        Force any disabled tests suites to run
   --stats-file STATS_FILE
                         JSON statistics file [Default: /var/folders/tc/hbwxh76
-                        j1hn6gqjd2n2sjn4j9k1glp/T/ptr_stats_32844]
+                        j1hn6gqjd2n2sjn4j9k1glp/T/ptr_stats_12510]
   --venv VENV           Path to venv to reuse
   --venv-timeout VENV_TIMEOUT
                         Timeout in seconds for venv creation + deps install
