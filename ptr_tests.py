@@ -67,7 +67,7 @@ class TestPtr(unittest.TestCase):
     def setUp(self) -> None:
         self.loop = asyncio.get_event_loop()
 
-    @patch("ptr._get_site_packages_path")  # noqa
+    @patch("ptr._get_site_packages_path")
     def test_analyze_coverage_errors(self, mock_path: Mock) -> None:
         mock_path.return_value = None
         fake_path = Path(gettempdir())
@@ -77,7 +77,7 @@ class TestPtr(unittest.TestCase):
             ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report", {})
         )
 
-    @patch("ptr.getpid", return_specific_pid)  # noqa
+    @patch("ptr.getpid", return_specific_pid)
     def test_analyze_coverage(self) -> None:
         fake_setup_py = Path("unittest/setup.py")
         if "VIRTUAL_ENV" in environ:
@@ -151,7 +151,7 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(
             self.loop.run_until_complete(ptr.async_main(*args)), 2  # pyre-ignore
         )
-        # Make Path() throw a TypeError on purpose
+        # Make Path() throw a TypeError on purpose so need to ignore type error
         args[4] = 0.69  # pyre-ignore
         self.assertIsNone(
             self.loop.run_until_complete(ptr.async_main(*args))  # pyre-ignore
@@ -170,8 +170,8 @@ class TestPtr(unittest.TestCase):
         )
         self.assertEqual(len(sc["ptr"].get("venv_pkgs", "").split()), 8)
 
-    @patch("ptr._gen_check_output", async_none)  # noqa
-    @patch("ptr._set_pip_mirror")  # noqa
+    @patch("ptr._gen_check_output", async_none)
+    @patch("ptr._set_pip_mirror")
     def test_create_venv(self, mock_pip_mirror: Mock) -> None:
         self.assertTrue(
             isinstance(
@@ -484,7 +484,7 @@ class TestPtr(unittest.TestCase):
         expected_path = Path(path_str)
         self.assertEqual(ptr._validate_base_dir(path_str), expected_path)
 
-    @patch("ptr.sys.exit")  # noqa
+    @patch("ptr.sys.exit")
     def test_validate_base_dir_fail(self, mock_exit: Mock) -> None:
         ptr._validate_base_dir(gettempdir() + "6969")
         mock_exit.assert_called_once()

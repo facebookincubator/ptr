@@ -397,7 +397,7 @@ async def _gen_check_output(
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
         env=env,
-        cwd=cwd
+        cwd=cwd,
     )
     try:
         (stdout, stderr) = await asyncio.wait_for(process.communicate(), timeout)
@@ -587,6 +587,7 @@ async def _test_steps_runner(  # pylint: disable=R0914
                 if a_step.step_name == StepName.tests_run and error_on_warnings:
                     step_env = env.copy()
                     step_env["PYTHONWARNINGS"] = "error"
+                    LOG.debug("Setting PYTHONWARNINGS to error: {}".format(step_env))
 
                 stdout, _stderr = await _gen_check_output(
                     a_step.cmds, a_step.timeout, env=step_env, cwd=setup_py_path.parent
@@ -677,8 +678,8 @@ async def _test_runner(
             venv_path,
             env,
             stats,
-            print_cov,
             error_on_warnings,
+            print_cov,
         )
         total_success_runtime = int(time() - test_run_start_time)
         if test_fail_result:
@@ -947,7 +948,7 @@ async def async_main(
     atonce: int,
     base_path: Path,
     mirror: str,
-    progress_interval: Union[float, int],
+    progress_interval: float,
     venv: str,
     venv_keep: bool,
     print_cov: bool,
@@ -1020,7 +1021,7 @@ def main() -> None:
         "-e",
         "--error-on-warnings",
         action="store_true",
-        help="Have Warnings raise Errors",
+        help="Have Python warnings raise DeprecationWarning",
     )
     parser.add_argument(
         "-k", "--keep-venv", action="store_true", help="Do not remove created venv"
