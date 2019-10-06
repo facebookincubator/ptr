@@ -11,10 +11,10 @@ OR run ptr itself to enfore coverage, black, and mypy type results 🐓🥚
 """
 
 import json
+import sys
 from os import environ
 from pathlib import Path
 from subprocess import PIPE, run
-from sys import stderr
 from tempfile import gettempdir
 
 
@@ -37,15 +37,15 @@ def check_ptr_stats_json(stats_file: Path) -> int:
 
     any_fail = int(stats_json["total.fails"]) + int(stats_json["total.timeouts"])
     if any_fail:
-        print("Stats report {} fails/timeouts".format(any_fail), file=stderr)
+        print("Stats report {} fails/timeouts".format(any_fail), file=sys.stderr)
         return any_fail
 
     if int(stats_json["total.setup_pys"]) > 1:
-        print("Somehow we had more than 1 setup.py - What?", file=stderr)
+        print("Somehow we had more than 1 setup.py - What?", file=sys.stderr)
         stats_errors += 1
 
     if int(stats_json["pct.setup_py_ptr_enabled"]) != 100:
-        print("We didn't test all setup.py files ...", file=stderr)
+        print("We didn't test all setup.py files ...", file=sys.stderr)
         stats_errors += 1
 
     # TODO: Make getting project name better - For now quick CI hack
@@ -54,7 +54,7 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         if "_coverage." in key:
             coverage_key_count += 1
     if coverage_key_count != 4:
-        print("We didn't get coverage stats for all ptr files + total", file=stderr)
+        print("We didn't get coverage stats for all ptr files + total", file=sys.stderr)
         stats_errors += 1
 
     print("Stats check found {} error(s)".format(stats_errors))
@@ -64,7 +64,7 @@ def check_ptr_stats_json(stats_file: Path) -> int:
 
 def integration_test() -> int:
     # TODO: Plumb up to a coverage system - e.g. codecov (Issue #6)
-    print("Running `ptr` integration tests (aka run itself)", file=stderr)
+    print("Running `ptr` integration tests (aka run itself)", file=sys.stderr)
 
     stats_file = Path(gettempdir()) / "ptr_ci_stats"
     ci_cmd = [
@@ -86,13 +86,13 @@ def integration_test() -> int:
 
 def ci(show_env: bool = False) -> int:
     # Output exact python version
-    cp = run(("python", "-V"), stdout=PIPE, universal_newlines=True)
-    print("Using {}".format(cp.stdout), file=stderr)
+    cp = run(("python", "-V"), check=True, stdout=PIPE, universal_newlines=True)
+    print("Using {}".format(cp.stdout), file=sys.stderr)
 
     if show_env:
-        print("- Environment:", file=stderr)
+        print("- Environment:", file=sys.stderr)
         for key in sorted(environ.keys()):
-            print("{}: {}".format(key, environ[key]), file=stderr)
+            print("{}: {}".format(key, environ[key]), file=sys.stderr)
 
     # Azure sets CI_ENV=PTR_INTEGRATION
     # Travis sets PTR_INTEGRATION=1
@@ -101,9 +101,9 @@ def ci(show_env: bool = False) -> int:
     ):
         return integration_test()
 
-    print("Running `ptr` unit tests", file=stderr)
-    return run(("python", "setup.py", "test")).returncode
+    print("Running `ptr` unit tests", file=sys.stderr)
+    return run(("python", "setup.py", "test"), check=True).returncode
 
 
 if __name__ == "__main__":
-    exit(ci())
+    sys.exit(ci())

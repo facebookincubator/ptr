@@ -26,7 +26,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Un
 
 
 LOG = logging.getLogger(__name__)
-MAC = system() == "Darwin"
+MACOSX = system() == "Darwin"
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
 # Need to use sys.platform for mypy to understand
@@ -81,7 +81,7 @@ PIP_CONF_TEMPLATE = """\
 index-url = {}
 timeout = {}"""
 # Windows venv + pip are super slow
-VENV_TIMEOUT = 120 if WINDOWS or MAC else 30
+VENV_TIMEOUT = 120 if WINDOWS or MACOSX else 30
 
 
 class StepName(Enum):
@@ -146,25 +146,30 @@ def _analyze_coverage(
         if not line or line.startswith("-") or line.startswith("Name"):
             continue
 
-        sl = line.split(maxsplit=4)
-
         module_path_str = None
         sl_path = None
+
+        sl = line.split(maxsplit=4)
         if sl[0] != "TOTAL":
-            sl_path = Path(sl[0])
+            sl_path = _max_osx_private_handle(sl[0], site_packages_path)
+
         if sl_path and sl_path.is_absolute() and site_packages_path:
             for possible_abs_path in (module_path, site_packages_path):
                 try:
                     module_path_str = str(sl_path.relative_to(possible_abs_path))
-                except ValueError:
-                    pass
+                except ValueError as ve:
+                    LOG.debug(ve)
         elif sl_path:
             module_path_str = str(sl_path).replace(relative_site_packages, "")
         else:
             module_path_str = sl[0]
 
         if not module_path_str:
-            LOG.error("Unable to find path relative path for {}".format(sl[0]))
+            LOG.error(
+                "[{}] Unable to find path relative path for {}".format(
+                    setup_py_path, sl[0]
+                )
+            )
             continue
 
         if len(sl) == 4:
@@ -204,6 +209,26 @@ def _analyze_coverage(
         )
 
     return None
+
+
+def _max_osx_private_handle(
+    potenital_path: str, site_packages_path: Path
+) -> Optional[Path]:
+    """ On Mac OS X `coverage` seems to always resolve /private for anything stored in /var.
+        ptr's usage of gettempdir() seems to result in using dirs within there
+        This function strips /private if it exists on the path supplied from coverage
+        ONLY IF site_packages_path is not based in /private"""
+    if not MACOSX:
+        return Path(potenital_path)
+
+    private_path = Path("/private")
+    try:
+        site_packages_path.relative_to(private_path)
+        return Path(potenital_path)
+    except ValueError:
+        pass
+
+    return Path(potenital_path.replace("/private", ""))
 
 
 def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
