@@ -126,6 +126,33 @@ class TestPtr(unittest.TestCase):
         if "VIRTUAL_ENV" not in environ:
             rmtree(fake_venv_path)
 
+    def test_mac_osx_slash_private(self) -> None:
+        macosx = ptr.MACOSX
+        non_private_path_str = "/var/tmp"
+        private_path_str = "/private{}".format(non_private_path_str)
+        site_packages_path = Path("/var/tmp/venv/lib/site-packages/")
+        try:
+            ptr.MACOSX = False
+            self.assertEqual(
+                Path(private_path_str),
+                ptr._max_osx_private_handle(private_path_str, site_packages_path),
+            )
+
+            ptr.MACOSX = True
+            self.assertEqual(
+                Path(non_private_path_str),
+                ptr._max_osx_private_handle(private_path_str, site_packages_path),
+            )
+
+            site_packages_path = Path("/private/var/tmp/venv/lib/site-packages/")
+            self.assertEqual(
+                Path(private_path_str),
+                ptr._max_osx_private_handle(private_path_str, site_packages_path),
+            )
+        finally:
+            # Ensure we also restore if we're MACOSX or not
+            ptr.MACOSX = macosx
+
     @patch("ptr.run_tests", async_none)
     @patch("ptr._get_test_modules")
     def test_async_main(self, mock_gtm: Mock) -> None:
@@ -319,7 +346,7 @@ class TestPtr(unittest.TestCase):
 
         # TODO: Test this on Windows and ensure we capture failures corerctly
         with self.assertRaises(CalledProcessError):
-            if ptr.MAC:
+            if ptr.MACOSX:
                 false = "/usr/bin/false"
             else:
                 false = "/bin/false"
