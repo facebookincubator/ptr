@@ -2,7 +2,15 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
-### 2019.9.11
+### 2019.10.6
+
+Codename: **Standford, CA**
+
+*@cooperlees tailgated there yesterday 🚐🏈*
+
+- Handle OSX /private in coverage report - PR: #60
+
+### 2019.9.14
 
 Codename: **Clowntown 🤡**
 
