@@ -192,8 +192,19 @@ def _analyze_coverage(
 
     failed_output = "The following files did not meet coverage requirements:\n"
     failed_coverage = False
+
     for afile, cov_req in required_cov.items():
-        if coverage_lines[afile].cover < cov_req:
+        try:
+            cover = coverage_lines[afile].cover
+        except KeyError as ke:
+            LOG.error(
+                "{} has not reported any coverage. \\"
+                "Does the file exist? Does it get ran during tests? ({})".format(
+                    afile, str(ke)
+                )
+            )
+            return None
+        if cover < cov_req:
             failed_coverage = True
             failed_output += "  {}: {} < {} - Missing: {}\n".format(
                 afile,

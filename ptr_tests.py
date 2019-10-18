@@ -77,8 +77,9 @@ class TestPtr(unittest.TestCase):
             ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report", {})
         )
 
+    @patch("ptr.LOG.error")
     @patch("ptr.getpid", return_specific_pid)
-    def test_analyze_coverage(self) -> None:
+    def test_analyze_coverage(self, mock_log: Mock) -> None:
         fake_setup_py = Path("unittest/setup.py")
         if "VIRTUAL_ENV" in environ:
             fake_venv_path = Path(environ["VIRTUAL_ENV"])
@@ -121,7 +122,12 @@ class TestPtr(unittest.TestCase):
             ),
             ptr_tests_fixtures.EXPECTED_PTR_COVERAGE_FAIL_RESULT,
         )
-
+        self.assertIsNone(
+            ptr._analyze_coverage(
+                fake_venv_path, fake_setup_py, {"fake_file.py": 48}, cov_report, {}
+            )
+        )
+        self.assertTrue(mock_log.called)
         # Dont delete the VIRTUAL_ENV carrying the test if we didn't make it
         if "VIRTUAL_ENV" not in environ:
             rmtree(fake_venv_path)
