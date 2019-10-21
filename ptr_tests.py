@@ -34,7 +34,7 @@ TOTAL_REPORTER_TESTS = 4
 
 
 async def async_none(*args: Any, **kwargs: Any) -> None:
-    return
+    return None
 
 
 def fake_get_event_loop(*args: Any, **kwargs: Any) -> ptr_tests_fixtures.FakeEventLoop:
@@ -305,13 +305,10 @@ class TestPtr(unittest.TestCase):
             pyre_exe = Path("pyre")
 
             conf = {"run_pyre": True}
-            if ptr.WINDOWS:
-                self.assertEqual(ptr._generate_pyre_cmd(td_path, pyre_exe, conf), ())
-            else:
-                self.assertEqual(
-                    ptr._generate_pyre_cmd(td_path, pyre_exe, conf),
-                    (str(pyre_exe), "--source-directory", str(td_path), "check"),
-                )
+            expected = (str(pyre_exe), "--source-directory", str(td_path), "check")
+            if ptr.WINDOWS or ptr.GREATER_THAN_37:
+                expected = ()
+            self.assertEqual(ptr._generate_pyre_cmd(td_path, pyre_exe, conf), expected)
 
     def test_get_site_packages_path_error(self) -> None:
         with TemporaryDirectory() as td:
@@ -476,11 +473,11 @@ class TestPtr(unittest.TestCase):
                         True,
                     )
                 ),
-                # Windows will not run pyre
-                (None, 6) if ptr.WINDOWS else (None, 7),
+                # Windows + Python 3.8 will not run pyre
+                (None, 6) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 7),
             )
 
-            if ptr.WINDOWS:
+            if ptr.WINDOWS or ptr.GREATER_THAN_37:
                 # No pyre
                 expected = (None, 7)
             else:

@@ -103,3 +103,6 @@ UNKNOWN.egg-info/
 
 # pyre checking
 .pyre/
+
+# vscode
+.vscode/

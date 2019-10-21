@@ -10,9 +10,12 @@ matrix:
     - python: 3.7
     - python: 3.7
       env: PTR_INTEGRATION=1
-    - python: 3.8-dev
+    - python: 3.8
+    - python: 3.8
+      env: PTR_INTEGRATION=1
+    - python: nightly
   allow_failures:
-    - python: 3.8-dev
+    - python: nightly
 
 script:
     - python ci.py
