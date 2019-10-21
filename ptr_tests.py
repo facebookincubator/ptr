@@ -34,7 +34,7 @@ TOTAL_REPORTER_TESTS = 4
 
 
 async def async_none(*args: Any, **kwargs: Any) -> None:
-    return
+    return None
 
 
 def fake_get_event_loop(*args: Any, **kwargs: Any) -> ptr_tests_fixtures.FakeEventLoop:

@@ -27,6 +27,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Un
 
 LOG = logging.getLogger(__name__)
 MACOSX = system() == "Darwin"
+GREATER_THAN_37 = sys.version_info >= (3, 8)
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
 # Need to use sys.platform for mypy to understand
@@ -314,7 +315,7 @@ def _generate_pylint_cmd(
 def _generate_pyre_cmd(
     module_dir: Path, pyre_exe: Path, config: Dict
 ) -> Tuple[str, ...]:
-    if not config.get("run_pyre", False) or WINDOWS:
+    if not config.get("run_pyre", False) or WINDOWS or GREATER_THAN_37:
         return ()
 
     return (str(pyre_exe), "--source-directory", str(module_dir), "check")
@@ -580,7 +581,12 @@ async def _test_steps_runner(  # pylint: disable=R0914
         ),
         step(
             StepName.pyre_run,
-            bool("run_pyre" in config and config["run_pyre"] and not WINDOWS),
+            bool(
+                "run_pyre" in config
+                and config["run_pyre"]
+                and not WINDOWS
+                and not GREATER_THAN_37
+            ),
             _generate_pyre_cmd(setup_py_path.parent, pyre_exe, config),
             "Running pyre for {}".format(setup_py_path),
             config["test_suite_timeout"],
@@ -1046,7 +1052,7 @@ def main() -> None:
         "-e",
         "--error-on-warnings",
         action="store_true",
-        help="Have Python warnings raise DeprecationWarning",
+        help="Have Python warnings raise DeprecationWarning on tests run",
     )
     parser.add_argument(
         "-k", "--keep-venv", action="store_true", help="Do not remove created venv"

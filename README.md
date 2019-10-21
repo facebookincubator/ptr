@@ -281,6 +281,8 @@ All done! 💥 💔 💥
 
 ### pyre
 
+- `pyre` is not currently supported on 3.8. libCST requires [3.8 Support](https://github.com/Instagram/LibCST/issues/122)
+
 ```
 cooper-mbp1:ptr cooper$ /tmp/tp/bin/ptr --venv /var/folders/tc/hbwxh76j1hn6gqjd2n2sjn4j9k1glp/T/ptr_venv_49117
 [2019-05-03 14:51:43,623] INFO: Starting /tmp/tp/bin/ptr (ptr.py:1023)
