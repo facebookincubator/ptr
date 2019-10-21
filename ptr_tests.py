@@ -476,11 +476,11 @@ class TestPtr(unittest.TestCase):
                         True,
                     )
                 ),
-                # Windows will not run pyre
-                (None, 6) if ptr.WINDOWS else (None, 7),
+                # Windows + Python 3.8 will not run pyre
+                (None, 6) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 7),
             )
 
-            if ptr.WINDOWS:
+            if ptr.WINDOWS or ptr.GREATER_THAN_37:
                 # No pyre
                 expected = (None, 7)
             else:
