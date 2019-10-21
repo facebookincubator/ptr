@@ -347,4 +347,4 @@ IRC: `#pythontestrunner` on *FreeNode*
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## License
-`ptr` is MIT licensed, as found in the LICENSE file.
+`ptr` is MIT licensed, as found in the [LICENSE file](LICENSE).
