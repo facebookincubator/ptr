@@ -305,13 +305,10 @@ class TestPtr(unittest.TestCase):
             pyre_exe = Path("pyre")
 
             conf = {"run_pyre": True}
-            if ptr.WINDOWS:
-                self.assertEqual(ptr._generate_pyre_cmd(td_path, pyre_exe, conf), ())
-            else:
-                self.assertEqual(
-                    ptr._generate_pyre_cmd(td_path, pyre_exe, conf),
-                    (str(pyre_exe), "--source-directory", str(td_path), "check"),
-                )
+            expected = (str(pyre_exe), "--source-directory", str(td_path), "check")
+            if ptr.WINDOWS or ptr.GREATER_THAN_37:
+                expected = ()
+            self.assertEqual(ptr._generate_pyre_cmd(td_path, pyre_exe, conf), expected)
 
     def test_get_site_packages_path_error(self) -> None:
         with TemporaryDirectory() as td:
