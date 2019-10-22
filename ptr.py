@@ -123,6 +123,7 @@ def _analyze_coverage(
     required_cov: Dict[str, int],
     coverage_report: str,
     stats: Dict[str, int],
+    test_run_start_time: float,
 ) -> Optional[test_result]:
     module_path = setup_py_path.parent
     site_packages_path = _get_site_packages_path(venv_path)
@@ -197,14 +198,20 @@ def _analyze_coverage(
     for afile, cov_req in required_cov.items():
         try:
             cover = coverage_lines[afile].cover
-        except KeyError as ke:
-            LOG.error(
-                "{} has not reported any coverage. \\"
-                "Does the file exist? Does it get ran during tests? ({})".format(
-                    afile, str(ke)
-                )
+        except KeyError:
+            err = (
+                "{} has not reported any coverage. Does the file exist? "
+                "Does it get ran during tests? Remove from setup config.".format(afile)
             )
-            return None
+            keyerror_runtime = int(time() - test_run_start_time)
+            return test_result(
+                setup_py_path,
+                StepName.analyze_coverage.value,
+                err,
+                keyerror_runtime,
+                False,
+            )
+
         if cover < cov_req:
             failed_coverage = True
             failed_output += "  {}: {} < {} - Missing: {}\n".format(
@@ -214,10 +221,14 @@ def _analyze_coverage(
                 coverage_lines[afile].missing,
             )
 
-    # TODO: Fix runtime everywhere when I add the stats output
     if failed_coverage:
+        failed_cov_runtime = int(time() - test_run_start_time)
         return test_result(
-            setup_py_path, StepName.analyze_coverage.value, failed_output, 0, False
+            setup_py_path,
+            StepName.analyze_coverage.value,
+            failed_output,
+            failed_cov_runtime,
+            False,
         )
 
     return None
@@ -673,6 +684,7 @@ async def _test_steps_runner(  # pylint: disable=R0914
                     config["required_coverage"],
                     cov_report,
                     stats,
+                    test_run_start_time,
                 )
 
         # If we've had a failure return

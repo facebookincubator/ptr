@@ -71,15 +71,17 @@ class TestPtr(unittest.TestCase):
     def test_analyze_coverage_errors(self, mock_path: Mock) -> None:
         mock_path.return_value = None
         fake_path = Path(gettempdir())
-        self.assertIsNone(ptr._analyze_coverage(fake_path, fake_path, {}, "", {}))
+        self.assertIsNone(ptr._analyze_coverage(fake_path, fake_path, {}, "", {}, 0))
         mock_path.return_value = fake_path
         self.assertIsNone(
-            ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report", {})
+            ptr._analyze_coverage(fake_path, fake_path, {}, "Fake Cov Report", {}, 0)
         )
 
+    @patch("ptr.time")
     @patch("ptr.LOG.error")
     @patch("ptr.getpid", return_specific_pid)
-    def test_analyze_coverage(self, mock_log: Mock) -> None:
+    def test_analyze_coverage(self, mock_log: Mock, mock_time: Mock) -> None:
+        mock_time.return_value = 0
         fake_setup_py = Path("unittest/setup.py")
         if "VIRTUAL_ENV" in environ:
             fake_venv_path = Path(environ["VIRTUAL_ENV"])
@@ -88,10 +90,10 @@ class TestPtr(unittest.TestCase):
                 ptr.create_venv("https://pypi.com/s", install_pkgs=False)
             )
         self.assertIsNone(
-            ptr._analyze_coverage(fake_venv_path, fake_setup_py, {}, "", {})
+            ptr._analyze_coverage(fake_venv_path, fake_setup_py, {}, "", {}, 0)
         )
         self.assertIsNone(
-            ptr._analyze_coverage(fake_venv_path, fake_setup_py, {"bla": 69}, "", {})
+            ptr._analyze_coverage(fake_venv_path, fake_setup_py, {"bla": 69}, "", {}, 0)
         )
 
         # Test with simple py_modules
@@ -102,6 +104,7 @@ class TestPtr(unittest.TestCase):
                 ptr_tests_fixtures.FAKE_REQ_COVERAGE,
                 ptr_tests_fixtures.SAMPLE_REPORT_OUTPUT,
                 {},
+                0,
             ),
             ptr_tests_fixtures.EXPECTED_COVERAGE_FAIL_RESULT,
         )
@@ -119,13 +122,16 @@ class TestPtr(unittest.TestCase):
                 ptr_tests_fixtures.FAKE_TG_REQ_COVERAGE,
                 cov_report,
                 {},
+                0,
             ),
             ptr_tests_fixtures.EXPECTED_PTR_COVERAGE_FAIL_RESULT,
         )
-        self.assertIsNone(
+        # Test we error on non existent files with coverage requirements
+        self.assertEqual(
             ptr._analyze_coverage(
-                fake_venv_path, fake_setup_py, {"fake_file.py": 48}, cov_report, {}
-            )
+                fake_venv_path, fake_setup_py, {"fake_file.py": 48}, cov_report, {}, 0
+            ),
+            ptr_tests_fixtures.EXPECTED_PTR_COVERAGE_MISSING_FILE_RESULT,
         )
         self.assertTrue(mock_log.called)
         # Dont delete the VIRTUAL_ENV carrying the test if we didn't make it
