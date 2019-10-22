@@ -60,6 +60,16 @@ EXPECTED_PTR_COVERAGE_FAIL_RESULT = test_result(
     runtime=0,
     timeout=False,
 )
+EXPECTED_PTR_COVERAGE_MISSING_FILE_RESULT = test_result(
+    setup_py_path=Path("unittest/setup.py"),
+    returncode=3,
+    output=(
+        "fake_file.py has not reported any coverage. Does the file exist? "
+        + "Does it get ran during tests? Remove from setup config."
+    ),
+    runtime=0,
+    timeout=False,
+)
 
 EXPECTED_COVERAGE_RESULTS = [
     test_result(
