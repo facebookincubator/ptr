@@ -2,9 +2,20 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.10.22
+
+Codename: **Cairo, Egypt 🇪🇬**
+
+*@adhaamehab who first time contributed is from there! Thanks!*
+
+- Print more helpful error when file does not exist for coverage check - PR: #51
+- Officially Support Python 3.8 and enforce tests passing
+- Disable pyre-check for >=3.8 due to no support
+  - Issue to Track: https://github.com/facebook/pyre-check/issues/213
+
 ### 2019.10.6
 
-Codename: **Standford, CA**
+Codename: **Stanford, CA**
 
 *@cooperlees tailgated there yesterday 🚐🏈*
 
