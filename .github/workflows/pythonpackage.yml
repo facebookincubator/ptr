@@ -1,0 +1,37 @@
+name: pythontestrunner
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  pull_request:
+
+jobs:
+  build:
+    name: Building ptr for python ${{ matrix.python-version }} on ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.6, 3.7]
+        os: [macOS-latest, ubuntu-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: ptr-ci
+      run: |
+        python ci.py 
+    - name: ptr-ci-integration
+      env: 
+       PTR_INTEGRATION: 1
+      run: |
+        python ci.py 
