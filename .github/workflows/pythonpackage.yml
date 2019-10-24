@@ -1,15 +1,22 @@
 name: pythontestrunner
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  pull_request:
 
 jobs:
   build:
-    name: Building ptr on python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: Building ptr for python ${{ matrix.python-version }} on ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 4
       matrix:
         python-version: [3.6, 3.7]
+        os: [macOS-latest, ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
