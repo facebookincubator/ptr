@@ -45,7 +45,7 @@ def _config_default() -> ConfigParser:
     LOG.info("Using default config settings")
     cp = ConfigParser()
     cp["ptr"] = {}
-    cp["ptr"]["atonce"] = str(int((cpu_count() or 20) / 2))
+    cp["ptr"]["atonce"] = str(int((cpu_count() or 20) / 2) or 1)
     cp["ptr"]["exclude_patterns"] = "build* yocto"
     cp["ptr"]["pypi_url"] = "https://pypi.org/simple/"
     cp["ptr"]["venv_pkgs"] = venv_pkgs
