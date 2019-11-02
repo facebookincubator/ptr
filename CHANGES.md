@@ -2,6 +2,15 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.11.2
+
+Codename: **Mumbai, India 🇮🇳**
+
+*@spurav is from Mumbai, India*
+
+- Fix math error dividing 1 / 2 for os.cpu_count - PR: #69 - *Thanks @spurav!*
+- Get GitHub Actions CI Running
+
 ### 2019.10.22
 
 Codename: **Cairo, Egypt 🇪🇬**
