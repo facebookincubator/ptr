@@ -8,8 +8,8 @@ Codename: **Mumbai, India 🇮🇳**
 
 *@spurav is from Mumbai, India*
 
-- Fix math error dividing 1 / 2 for os.cpu_count - PR: #69 - *Thanks @spurav!*
-- Get GitHub Actions CI Running
+- Fix math error dividing 1 / 2 for os.cpu_count - PR: #69 - *Thanks @spurav*
+- Get GitHub Actions CI Running - PR: #68 + #70 - *Thanks @adhaamehab*
 
 ### 2019.10.22
 
