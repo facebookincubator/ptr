@@ -6,7 +6,7 @@
 # coding=utf8
 
 """
-ptr CI run script - Will either run unittests via 'python setup.py test'
+ptr CI run script - Will either run unittests via 'python ptr_tests.py'
 OR run ptr itself to enfore coverage, black, and mypy type results 🐓🥚
 """
 
@@ -102,7 +102,7 @@ def ci(show_env: bool = False) -> int:
         return integration_test()
 
     print("Running `ptr` unit tests", file=sys.stderr)
-    return run(("python", "setup.py", "test"), check=True).returncode
+    return run(("python", "ptr_tests.py", "-v"), check=True).returncode
 
 
 if __name__ == "__main__":
