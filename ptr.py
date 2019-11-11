@@ -16,7 +16,7 @@ from enum import Enum
 from json import dump
 from os import chdir, cpu_count, environ, getcwd, getpid
 from os.path import sep
-from pathlib import Path
+from pathlib import Path, PosixPath
 from platform import system
 from shutil import rmtree
 from subprocess import CalledProcessError
@@ -286,6 +286,14 @@ def _generate_install_cmd(
     return tuple(cmds)
 
 
+def _generate_test_suite_cmd(coverage_exe: PosixPath, config: Dict) -> Tuple[str, ...]:
+    return (
+        (str(coverage_exe), "run", "-m", config["test_suite"])
+        if config.get("test_suite", False)
+        else ()
+    )
+
+
 def _generate_mypy_cmd(
     module_dir: Path, mypy_exe: Path, config: Dict
 ) -> Tuple[str, ...]:
@@ -357,13 +365,7 @@ def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
 
                 if target_id == "ptr_params":
                     LOG.debug("Found ptr_params in {}".format(setup_py))
-                    ptr_params = dict(ast.literal_eval(node.value))
-                    if "test_suite" in ptr_params:
-                        return ptr_params
-                    LOG.info(
-                        "{} does not have a suite. Nothing to run".format(setup_py)
-                    )
-                    break
+                    return dict(ast.literal_eval(node.value))
     return {}
 
 
@@ -557,9 +559,9 @@ async def _test_steps_runner(  # pylint: disable=R0914
         ),
         step(
             StepName.tests_run,
-            True,
-            (str(coverage_exe), "run", "-m", config["test_suite"]),
-            "Running {} tests via coverage".format(config["test_suite"]),
+            bool("test_suite" in config and config["test_suite"]),
+            _generate_test_suite_cmd(coverage_exe, config),
+            "Running {} tests via coverage".format(config.get("test_suite", "")),
             config["test_suite_timeout"],
         ),
         step(
