@@ -478,6 +478,8 @@ class TestPtr(unittest.TestCase):
             fake_venv_path = td_path / "unittest_venv"
             fake_venv_lib_path = fake_venv_path / "lib"
             fake_venv_lib_path.mkdir(parents=True)
+            # Windows + Python 3.8 will not run pyre
+            no_pyre = ptr.WINDOWS or ptr.GREATER_THAN_37
             tsr_params = [
                 69,  # test_start_time
                 {fake_setup_py: {}},  # tests_to_run
@@ -489,53 +491,39 @@ class TestPtr(unittest.TestCase):
                 False,  # print_cov
             ]
 
-            # Run everything but black + no print cov
-            etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
-            del etp["run_black"]
-            tsr_params[1] = {fake_setup_py: etp}
-            # Windows + Python 3.8 will not run pyre
-            expected_no_pyre = (
-                (None, 6) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 7)
-            )
-            self.assertEqual(
-                self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
-                expected_no_pyre,
-            )
-
-            if ptr.WINDOWS or ptr.GREATER_THAN_37:
-                # No pyre
-                expected = (None, 7)
-            else:
-                # Running all steps on all other platforms
-                expected = (None, 8)
-
             # Run everything + with print_cov
             tsr_params[1] = {fake_setup_py: ptr_tests_fixtures.EXPECTED_TEST_PARAMS}
             tsr_params[7] = True
             self.assertEqual(
-                self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
-                expected,
+                self.loop.run_until_complete(
+                    ptr._test_steps_runner(*tsr_params)  # pyre-ignore
+                ),
+                (None, 7) if no_pyre else (None, 8),
             )
 
-            # Run everything but test_suite without print_cov
-            # Windows + Python 3.8 will not run pyre
-            expected_no_pyre_tests = (
-                (None, 5) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 6)
+            # Run everything but black + no print cov
+            etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
+            del etp["run_black"]
+            tsr_params[1] = {fake_setup_py: etp}
+            tsr_params[7] = False
+            self.assertEqual(
+                self.loop.run_until_complete(
+                    ptr._test_steps_runner(*tsr_params)  # pyre-ignore
+                ),
+                (None, 6) if no_pyre else (None, 7),
             )
+
+            # Run everything but test_suite with print_cov
+            expected_no_pyre_tests = (None, 5) if no_pyre else (None, 6)
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
             del etp["test_suite"]
             del etp["required_coverage"]
             tsr_params[1] = {fake_setup_py: etp}
-            tsr_params[7] = False
-            self.assertEqual(
-                self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
-                expected_no_pyre_tests,
-            )
-
-            # Run everything but test_suite with print_cov - No print should occur
             tsr_params[7] = True
             self.assertEqual(
-                self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
+                self.loop.run_until_complete(
+                    ptr._test_steps_runner(*tsr_params)  # pyre-ignore
+                ),
                 expected_no_pyre_tests,
             )
 
