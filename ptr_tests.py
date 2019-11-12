@@ -557,7 +557,7 @@ class TestPtr(unittest.TestCase):
                         {},
                         {},
                         True,
-                        True
+                        True,
                     )
                 ),
                 # Windows + Python 3.8 will not run pyre
