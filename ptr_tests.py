@@ -480,7 +480,7 @@ class TestPtr(unittest.TestCase):
             fake_venv_lib_path.mkdir(parents=True)
             tsr_params = [
                 69,  # test_start_time
-                None,  # tests_to_run
+                {fake_setup_py: {}},  # tests_to_run
                 fake_setup_py,
                 fake_venv_path,
                 {},  # env
@@ -520,7 +520,7 @@ class TestPtr(unittest.TestCase):
             # Run everything but test_suite without print_cov
             # Windows + Python 3.8 will not run pyre
             expected_no_pyre_tests = (
-                (None, 7) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 6)
+                (None, 5) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 6)
             )
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
             del etp["test_suite"]
