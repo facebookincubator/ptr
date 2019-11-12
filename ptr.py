@@ -287,11 +287,10 @@ def _generate_install_cmd(
 
 
 def _generate_test_suite_cmd(coverage_exe: Path, config: Dict) -> Tuple[str, ...]:
-    return (
-        (str(coverage_exe), "run", "-m", config["test_suite"])
-        if config.get("test_suite", False)
-        else ()
-    )
+    if config.get("test_suite", False):
+        return (str(coverage_exe), "run", "-m", config["test_suite"])
+    else:
+        return ()
 
 
 def _generate_mypy_cmd(
