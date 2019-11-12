@@ -286,7 +286,7 @@ def _generate_install_cmd(
     return tuple(cmds)
 
 
-def _generate_test_suite_cmd(coverage_exe: Path, config: Dict) -> Iterable:
+def _generate_test_suite_cmd(coverage_exe: Path, config: Dict) -> Tuple[str, ...]:
     return (
         (str(coverage_exe), "run", "-m", config["test_suite"])
         if config.get("test_suite", False)
