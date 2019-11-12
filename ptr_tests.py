@@ -260,6 +260,18 @@ class TestPtr(unittest.TestCase):
             (python_exe, "-v", "install", module_dir, "peerme"),
         )
 
+    def test_generate_test_suite_cmd(self) -> None:
+        coverage_exe = Path("/bin/coverage")
+        with TemporaryDirectory():
+            config = {"test_suite": "dummy_test.base"}
+            self.assertEqual(
+                ptr._generate_test_suite_cmd(coverage_exe, config),
+                (str(coverage_exe), "run", "-m", config["test_suite"]),
+            )
+
+            config = {}
+            self.assertEqual(ptr._generate_test_suite_cmd(coverage_exe, config), ())
+
     def test_generate_mypy_cmd(self) -> None:
         with TemporaryDirectory() as td:
             td_path = Path(td)
@@ -512,6 +524,46 @@ class TestPtr(unittest.TestCase):
                 ),
                 expected,
             )
+
+            # Run everything but test_suite without print-cov
+            etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
+            del etp["test_suite"]
+            del etp["required_coverage"]
+            fake_no_black_tests_to_run = {fake_setup_py: etp}
+            self.assertEqual(
+                self.loop.run_until_complete(
+                    ptr._test_steps_runner(
+                        69,
+                        fake_no_black_tests_to_run,
+                        fake_setup_py,
+                        fake_venv_path,
+                        {},
+                        True,
+                        True,
+                    )
+                ),
+                # Windows + Python 3.8 will not run pyre
+                (None, 5) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 6),
+            )
+
+            # Run everything but test_suite with print-cov
+            self.assertEqual(
+                self.loop.run_until_complete(
+                    ptr._test_steps_runner(
+                        69,
+                        fake_no_black_tests_to_run,
+                        fake_setup_py,
+                        fake_venv_path,
+                        {},
+                        {},
+                        True,
+                        True,
+                    )
+                ),
+                # Windows + Python 3.8 will not run pyre
+                (None, 5) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 6),
+            )
+
             # Ensure we've "printed coverage"
             self.assertTrue(mock_print.called)
 

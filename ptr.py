@@ -286,6 +286,12 @@ def _generate_install_cmd(
     return tuple(cmds)
 
 
+def _generate_test_suite_cmd(coverage_exe: Path, config: Dict) -> Tuple[str, ...]:
+    if config.get("test_suite", False):
+        return (str(coverage_exe), "run", "-m", config["test_suite"])
+    return ()
+
+
 def _generate_mypy_cmd(
     module_dir: Path, mypy_exe: Path, config: Dict
 ) -> Tuple[str, ...]:
@@ -357,13 +363,7 @@ def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
 
                 if target_id == "ptr_params":
                     LOG.debug("Found ptr_params in {}".format(setup_py))
-                    ptr_params = dict(ast.literal_eval(node.value))
-                    if "test_suite" in ptr_params:
-                        return ptr_params
-                    LOG.info(
-                        "{} does not have a suite. Nothing to run".format(setup_py)
-                    )
-                    break
+                    return dict(ast.literal_eval(node.value))
     return {}
 
 
@@ -557,9 +557,9 @@ async def _test_steps_runner(  # pylint: disable=R0914
         ),
         step(
             StepName.tests_run,
-            True,
-            (str(coverage_exe), "run", "-m", config["test_suite"]),
-            "Running {} tests via coverage".format(config["test_suite"]),
+            bool("test_suite" in config and config["test_suite"]),
+            _generate_test_suite_cmd(coverage_exe, config),
+            "Running {} tests via coverage".format(config.get("test_suite", "")),
             config["test_suite_timeout"],
         ),
         step(
@@ -618,15 +618,10 @@ async def _test_steps_runner(  # pylint: disable=R0914
     steps_ran = 0
     for a_step in steps:
         a_test_result = None
-        # Skip test if disabled & not asked for print coverage on analyze_coverage
+        # Skip test if disabled
         if not a_step.run_condition:
-            if (
-                a_step.step_name is not StepName.analyze_coverage
-                or not print_cov
-                and a_step.step_name is StepName.analyze_coverage
-            ):
-                LOG.info("Not running {} step".format(a_step.log_message))
-                continue
+            LOG.info("Not running {} step".format(a_step.log_message))
+            continue
 
         LOG.info(a_step.log_message)
         stdout = b""
@@ -686,7 +681,6 @@ async def _test_steps_runner(  # pylint: disable=R0914
                     stats,
                     test_run_start_time,
                 )
-
         # If we've had a failure return
         if a_test_result:
             return a_test_result, steps_ran
