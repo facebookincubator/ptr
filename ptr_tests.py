@@ -533,6 +533,7 @@ class TestPtr(unittest.TestCase):
             )
 
             # Run everything but test_suite with print_cov - No print should occur
+            tsr_params[7] = True
             self.assertEqual(
                 self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
                 expected_no_pyre_tests,
