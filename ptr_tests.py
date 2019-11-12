@@ -262,7 +262,7 @@ class TestPtr(unittest.TestCase):
 
     def test_generate_test_suite_cmd(self) -> None:
         coverage_exe = Path("/bin/coverage")
-        with TemporaryDirectory() as td:
+        with TemporaryDirectory():
             config = {"test_suite": "dummy_test.base"}
             self.assertEqual(
                 ptr._generate_test_suite_cmd(coverage_exe, config),
