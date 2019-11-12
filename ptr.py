@@ -16,7 +16,7 @@ from enum import Enum
 from json import dump
 from os import chdir, cpu_count, environ, getcwd, getpid
 from os.path import sep
-from pathlib import Path, PosixPath
+from pathlib import Path
 from platform import system
 from shutil import rmtree
 from subprocess import CalledProcessError
@@ -286,7 +286,7 @@ def _generate_install_cmd(
     return tuple(cmds)
 
 
-def _generate_test_suite_cmd(coverage_exe: PosixPath, config: Dict) -> Tuple[str, ...]:
+def _generate_test_suite_cmd(coverage_exe, config: Dict) -> Tuple[str, ...]:
     return (
         (str(coverage_exe), "run", "-m", config["test_suite"])
         if config.get("test_suite", False)
@@ -620,15 +620,10 @@ async def _test_steps_runner(  # pylint: disable=R0914
     steps_ran = 0
     for a_step in steps:
         a_test_result = None
-        # Skip test if disabled & not asked for print coverage on analyze_coverage
+        # Skip test if disabled
         if not a_step.run_condition:
-            if (
-                a_step.step_name is not StepName.analyze_coverage
-                or not print_cov
-                and a_step.step_name is StepName.analyze_coverage
-            ):
-                LOG.info("Not running {} step".format(a_step.log_message))
-                continue
+            LOG.info("Not running {} step".format(a_step.log_message))
+            continue
 
         LOG.info(a_step.log_message)
         stdout = b""
@@ -688,7 +683,6 @@ async def _test_steps_runner(  # pylint: disable=R0914
                     stats,
                     test_run_start_time,
                 )
-
         # If we've had a failure return
         if a_test_result:
             return a_test_result, steps_ran

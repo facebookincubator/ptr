@@ -561,7 +561,7 @@ class TestPtr(unittest.TestCase):
                     )
                 ),
                 # Windows + Python 3.8 will not run pyre
-                (None, 6) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 7),
+                (None, 5) if ptr.WINDOWS or ptr.GREATER_THAN_37 else (None, 6),
             )
 
             # Ensure we've "printed coverage"
