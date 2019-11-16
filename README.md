@@ -1,8 +1,9 @@
 # 🏃‍♀️ `ptr` - Python Test Runner 🏃‍♂️
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-[![Build Status](https://travis-ci.com/facebookincubator/ptr.svg?token=mNAyoiwbJFtpeEWXdo5z&branch=master)](https://travis-ci.com/facebookincubator/ptr)
 [![Actions Status](https://github.com/facebookincubator/ptr/workflows/ptr_ci/badge.svg)](https://github.com/facebookincubator/ptr/actions)
+[![PyPI](https://img.shields.io/pypi/v/ptr)](https://pypi.org/project/ptr/)
+[![Downloads](https://pepy.tech/badge/ptr/week)](https://pepy.tech/project/ptr/week)
 
 Python Test Runner (ptr) was born to run tests in an opinionated way, within arbitrary code repositories.
 `ptr` supports many Python projects with unit tests defined in their `setup.(cfg|py)` files per repository.
