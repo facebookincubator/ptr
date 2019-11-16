@@ -30,4 +30,4 @@ jobs:
       env:
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
       run: |
-        twine upload --verbose -u '__token__' build/*
+        twine upload --verbose -u '__token__' dist/*
