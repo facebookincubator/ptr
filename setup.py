@@ -47,7 +47,7 @@ def get_long_desc() -> str:
 
 setup(
     name=ptr_params["entry_point_module"],
-    version="19.11.2",
+    version="19.11.15",
     description="Parallel asyncio Python setup.(cfg|py) Test Runner",
     long_description=get_long_desc(),
     long_description_content_type="text/markdown",

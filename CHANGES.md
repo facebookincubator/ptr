@@ -2,6 +2,16 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.11.15
+
+Codename: **Russian River, CA 🇺🇸**
+
+*@cooperlees is going to the Russian River tomorrow*
+
+- Run ptr even when test_suite is not provided - PR: #73 - *Thanks @spurav*
+- Remove use of deprecated setuptools `test` option
+- Move to GitHub Actions for CI + Releases
+
 ### 2019.11.2
 
 Codename: **Mumbai, India 🇮🇳**
