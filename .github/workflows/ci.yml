@@ -1,4 +1,4 @@
-name: pythontestrunner
+name: ptr_ci
 
 on: [push, pull_request]
 
@@ -28,7 +28,7 @@ jobs:
         python ci.py
 
     - name: Run ptr CI
-      env: 
+      env:
        PTR_INTEGRATION: 1
        pythonioencoding: utf-8
       run: |
