@@ -2,6 +2,14 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.11.21
+
+Codename: **Santa Clara, CA**
+
+*@thatch lives there!**
+
+- Add license file for @thatch - PR: #77 - *Thanks @thatch*
+
 ### 2019.11.15
 
 Codename: **Russian River, CA 🇺🇸**
