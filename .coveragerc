@@ -1,3 +1,2 @@
 [run]
-branch = True
 source = ptr, ptr_tests, ptr_tests_fixtures
