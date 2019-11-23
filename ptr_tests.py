@@ -55,6 +55,10 @@ def return_specific_pid(*args: Any, **kwargs: Any) -> int:
     return 2580217
 
 
+def return_zero(*args: Any, **kwargs: Any) -> int:
+    return 0
+
+
 def touch_files(*paths: Path) -> None:
     for path in paths:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -376,12 +380,10 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(ptr._handle_debug(True), True)
 
     @patch("ptr.asyncio.get_event_loop", fake_get_event_loop)
-    @patch("ptr.async_main")
+    @patch("ptr.async_main", return_zero)
     @patch("ptr._validate_base_dir")
     @patch("ptr.argparse.ArgumentParser.parse_args")
-    def test_main(
-        self, mock_args: Mock, mock_validate: Mock, mock_async_main: Mock
-    ) -> None:
+    def test_main(self, mock_args: Mock, mock_validate: Mock) -> None:
         with self.assertRaises(SystemExit):
             ptr.main()
 
