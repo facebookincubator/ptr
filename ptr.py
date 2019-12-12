@@ -22,7 +22,7 @@ from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import gettempdir
 from time import time
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 
 LOG = logging.getLogger(__name__)
@@ -435,7 +435,7 @@ def _validate_base_dir(base_dir: str) -> Path:
 
 
 async def _gen_check_output(
-    cmd: Iterable[str],
+    cmd: Sequence[str],
     timeout: Union[int, float] = 30,
     env: Optional[Dict[str, str]] = None,
     cwd: Optional[Path] = None,
@@ -753,6 +753,7 @@ async def create_venv(
     py_exe: str = sys.executable,
     install_pkgs: bool = True,
     timeout: float = VENV_TIMEOUT,
+    system_site_packages: bool = False,
 ) -> Optional[Path]:
     start_time = time()
     venv_path = Path(gettempdir()) / "ptr_venv_{}".format(getpid())
@@ -763,7 +764,11 @@ async def create_venv(
 
     install_cmd: List[str] = []
     try:
-        await _gen_check_output((py_exe, "-m", "venv", str(venv_path)), timeout=timeout)
+        cmd = [py_exe, "-m", "venv", str(venv_path)]
+        if system_site_packages:
+            cmd.append("--system-site-packages")
+
+        await _gen_check_output(cmd, timeout=timeout)
         _set_pip_mirror(venv_path, mirror)
         if install_pkgs:
             install_cmd = [str(pip_exe), "install"]
@@ -932,12 +937,17 @@ async def run_tests(
     stats_file: str,
     venv_timeout: float,
     error_on_warnings: bool,
+    system_site_packages: bool,
 ) -> int:
     tests_start_time = time()
 
     if not venv_path or not venv_path.exists():
         venv_create_start_time = time()
-        venv_path = await create_venv(mirror=mirror, timeout=venv_timeout)
+        venv_path = await create_venv(
+            mirror=mirror,
+            timeout=venv_timeout,
+            system_site_packages=system_site_packages,
+        )
         stats["venv_create_time"] = int(time() - venv_create_start_time)
     else:
         venv_keep = True
@@ -1005,6 +1015,7 @@ async def async_main(
     stats_file: str,
     venv_timeout: float,
     error_on_warnings: bool,
+    system_site_packages: bool,
 ) -> int:
     stats = defaultdict(int)  # type: Dict[str, int]
     tests_to_run = _get_test_modules(
@@ -1041,6 +1052,7 @@ async def async_main(
         stats_file,
         venv_timeout,
         error_on_warnings,
+        system_site_packages,
     )
 
 
@@ -1115,6 +1127,11 @@ def main() -> None:
             VENV_TIMEOUT
         ),
     )
+    parser.add_argument(
+        "--system-site-packages",
+        action="store_true",
+        help="Give the virtual environment access to the system site-packages dir.",
+    )
     args = parser.parse_args()
     _handle_debug(args.debug)
 
@@ -1136,6 +1153,7 @@ def main() -> None:
                     args.stats_file,
                     args.venv_timeout,
                     args.error_on_warnings,
+                    args.system_site_packages,
                 )
             )
         )
