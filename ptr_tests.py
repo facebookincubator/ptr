@@ -6,6 +6,7 @@
 # coding=utf8
 
 import asyncio
+import sys
 import unittest
 from collections import defaultdict
 from copy import deepcopy
@@ -19,6 +20,7 @@ from typing import (  # noqa: F401 # pylint: disable=unused-import
     Dict,
     List,
     Optional,
+    Sequence,
     Tuple,
 )
 from unittest.mock import Mock, patch
@@ -35,6 +37,11 @@ TOTAL_REPORTER_TESTS = 4
 
 async def async_none(*args: Any, **kwargs: Any) -> None:
     return None
+
+
+async def check_site_package_config(cmd: Sequence, *args: Any, **kwargs: Any) -> None:
+    py_exe = sys.executable
+    assert "--system-site-packages" in cmd, f"--system-site-packages not found in {cmd}"
 
 
 def fake_get_event_loop(*args: Any, **kwargs: Any) -> ptr_tests_fixtures.FakeEventLoop:
@@ -185,6 +192,7 @@ class TestPtr(unittest.TestCase):
             "stats",
             30,
             True,
+            False,
         ]
         mock_gtm.return_value = False
         self.assertEqual(
@@ -219,6 +227,15 @@ class TestPtr(unittest.TestCase):
         self.assertTrue(
             isinstance(
                 self.loop.run_until_complete(ptr.create_venv("https://pip.com/")), Path
+            )
+        )
+
+    @patch("ptr._gen_check_output", check_site_package_config)
+    @patch("ptr._set_pip_mirror")
+    def test_create_venv_site_packages(self, mock_pip_mirror: Mock) -> None:
+        self.loop.run_until_complete(
+            ptr.create_venv(
+                "https://pip.com/", install_pkgs=False, system_site_packages=True
             )
         )
 
