@@ -2,6 +2,14 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.12.12
+
+Codename: **Sapporo, Japan 🇯🇵**
+
+*@omikader is going skiing there in February*
+
+- Add support for passing `--system-site-packages` during venv creation - PR: #80
+
 ### 2019.11.21
 
 Codename: **Santa Clara, CA**
