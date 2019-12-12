@@ -6,7 +6,6 @@
 # coding=utf8
 
 import asyncio
-import sys
 import unittest
 from collections import defaultdict
 from copy import deepcopy
@@ -40,7 +39,6 @@ async def async_none(*args: Any, **kwargs: Any) -> None:
 
 
 async def check_site_package_config(cmd: Sequence, *args: Any, **kwargs: Any) -> None:
-    py_exe = sys.executable
     assert "--system-site-packages" in cmd, f"--system-site-packages not found in {cmd}"
 
 

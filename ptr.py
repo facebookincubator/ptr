@@ -22,7 +22,7 @@ from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import gettempdir
 from time import time
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 
 LOG = logging.getLogger(__name__)
