@@ -2,6 +2,15 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.12.13
+
+Codename: **College Park, MD 🐢**
+
+*@omikader studied at the University of Maryland, College Park*
+
+- Add ability to create partial `.ptrconfig` files - PR: #83
+- Use native recursive file search for black and flake8 - PR: #81
+
 ### 2019.12.12
 
 Codename: **Sapporo, Japan 🇯🇵**
@@ -75,7 +84,7 @@ Codename: **Rathbone Square**
 Codename: **Ellicott City**
 
 *@omikader who reported and tested the fix for AST parsing is from there.*
-*Ellicott City is also home to one of the oldest surving train stations in the US!*
+*Ellicott City is also home to one of the oldest surviving train stations in the US!*
 
 - Fix AST parsing to ignore AST targets that do not have an `id` attribute - Issue: #54
 - Renable `black` by default on 3.7 now that it runs on > 3.7.2 - Issue: #41
@@ -105,7 +114,7 @@ Codename: **Cleveland**
 
 *🇺🇸 @cooperlees + @jreese are at PyCon US in Cleveland, OH 🦅*
 
-- Print step name in failue output - Issue: #31
+- Print step name in failure output - Issue: #31
 - Add in `pyre` Type Checking step support - Issue: #38 + #40
 
 **Known Bug:** `black.exe` does not run in Windows 3.7 - **disabled** by *default* on Python 3.7 on Windows
