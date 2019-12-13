@@ -214,9 +214,7 @@ class TestPtr(unittest.TestCase):
 
         td = Path(__file__).parent
         sc = ptr._config_read(str(td), "ptrconfig.sample")
-        self.assertEqual(
-            sc["ptr"].get("pypi_url", ""), expected_pypi_url  # pyre-ignore
-        )
+        self.assertEqual(sc["ptr"].get("pypi_url", ""), expected_pypi_url)
         self.assertEqual(len(sc["ptr"].get("venv_pkgs", "").split()), 8)
 
     @patch("ptr._gen_check_output", async_none)
