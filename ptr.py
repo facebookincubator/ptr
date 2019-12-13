@@ -52,16 +52,16 @@ def _config_default() -> ConfigParser:
     return cp
 
 
-def _config_read(cwd: str, conf_name: str = ".ptrconfig") -> Optional[ConfigParser]:
+def _config_read(
+    cwd: str, conf_name: str = ".ptrconfig", cp: ConfigParser = _config_default()
+) -> ConfigParser:
     """ Look from cwd to / for a "conf_name" file - If so read it in """
-    cp = None
     cwd_path = Path(cwd)  # type: Path
     root_path = Path("{}\\".format(cwd_path.drive)) if WINDOWS else Path("/")
 
     while cwd_path:
         ptrconfig_path = cwd_path / conf_name
         if ptrconfig_path.exists():
-            cp = ConfigParser()
             cp.read(str(ptrconfig_path))
 
             LOG.info("Loading found config @ {}".format(ptrconfig_path))
@@ -76,7 +76,7 @@ def _config_read(cwd: str, conf_name: str = ".ptrconfig") -> Optional[ConfigPars
 
 
 CWD = getcwd()
-CONFIG = _config_read(CWD) or _config_default()
+CONFIG = _config_read(CWD)
 PIP_CONF_TEMPLATE = """\
 [global]
 index-url = {}
