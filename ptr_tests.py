@@ -306,7 +306,6 @@ class TestPtr(unittest.TestCase):
         flake8_exe = Path("/bin/flake8")
         with TemporaryDirectory() as td:
             module_dir = Path(td)
-            subdir = module_dir / "awlib"
             cf = module_dir / ".flake8"
             touch_files(cf)
 
