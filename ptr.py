@@ -270,9 +270,7 @@ def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
 
 
 def _generate_black_cmd(module_dir: Path, black_exe: Path) -> Tuple[str, ...]:
-    py_files = set()  # type: Set[str]
-    find_py_files(py_files, module_dir)
-    return (str(black_exe), "--check", *sorted(py_files))
+    return (str(black_exe), "--check", ".")
 
 
 def _generate_install_cmd(
@@ -314,14 +312,11 @@ def _generate_flake8_cmd(
     if not config.get("run_flake8", False):
         return ()
 
-    py_files = set()  # type: Set[str]
-    find_py_files(py_files, module_dir)
-
     cmds = [str(flake8_exe)]
     flake8_config = module_dir / ".flake8"
     if flake8_config.exists():
         cmds.extend(["--config", str(flake8_config)])
-    return (*cmds, *sorted(py_files))
+    return tuple(cmds)
 
 
 def _generate_pylint_cmd(

@@ -260,14 +260,10 @@ class TestPtr(unittest.TestCase):
         black_exe = Path("/bin/black")
         with TemporaryDirectory() as td:
             module_dir = Path(td)
-            subdir = module_dir / "awlib"
-            py2 = subdir / "awesome2.py"
-            py1 = module_dir / "awesome.py"
-            touch_files(py1, py2)
 
             self.assertEqual(
                 ptr._generate_black_cmd(module_dir, black_exe),
-                (str(black_exe), "--check", str(py1), str(py2)),
+                (str(black_exe), "--check", "."),
             )
 
     def test_generate_install_cmd(self) -> None:
@@ -310,17 +306,14 @@ class TestPtr(unittest.TestCase):
         flake8_exe = Path("/bin/flake8")
         with TemporaryDirectory() as td:
             module_dir = Path(td)
-            subdir = module_dir / "awlib"
             cf = module_dir / ".flake8"
-            py2 = subdir / "awesome2.py"
-            py1 = module_dir / "awesome.py"
-            touch_files(cf, py1, py2)
+            touch_files(cf)
 
             conf = {"run_flake8": True}
 
             self.assertEqual(
                 ptr._generate_flake8_cmd(module_dir, flake8_exe, conf),
-                (str(flake8_exe), "--config", str(cf), str(py1), str(py2)),
+                (str(flake8_exe), "--config", str(cf)),
             )
 
     def test_generate_pylint_command(self) -> None:
