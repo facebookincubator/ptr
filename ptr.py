@@ -316,7 +316,7 @@ def _generate_flake8_cmd(
     flake8_config = module_dir / ".flake8"
     if flake8_config.exists():
         cmds.extend(["--config", str(flake8_config)])
-    return (*cmds)
+    return tuple(cmds)
 
 
 def _generate_pylint_cmd(
