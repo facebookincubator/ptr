@@ -308,6 +308,7 @@ class TestPtr(unittest.TestCase):
             module_dir = Path(td)
             subdir = module_dir / "awlib"
             cf = module_dir / ".flake8"
+            touch_files(cf)
 
             conf = {"run_flake8": True}
 
