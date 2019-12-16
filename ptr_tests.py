@@ -455,6 +455,7 @@ class TestPtr(unittest.TestCase):
             self.assertTrue("[global]" in conf_file)
             self.assertTrue("/simple" in conf_file)
 
+    @patch("ptr._using_coverage_5", async_none)
     @patch("ptr._test_steps_runner", fake_test_steps_runner)
     def test_test_runner(self) -> None:
         queue = asyncio.Queue()  # type: asyncio.Queue
@@ -537,6 +538,14 @@ class TestPtr(unittest.TestCase):
 
             # Ensure we've "printed coverage"
             self.assertEqual(mock_print.call_count, 1)
+
+    @patch("ptr._gen_check_output", return_bytes_output)
+    def test_using_coverage_5(self) -> None:
+        self.assertFalse(
+            self.loop.run_until_complete(
+                ptr._using_coverage_5(Path("venvs/test"), timeout=1)
+            )
+        )
 
     def test_validate_base_dir(self) -> None:
         path_str = gettempdir()
