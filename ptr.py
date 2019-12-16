@@ -702,7 +702,7 @@ async def _test_runner(
         else None
     )
     env = _set_build_env(extra_build_env_path)
-    env["COVERAGE_FILE"] = str(cov_data_path)
+    env["DATA_FILE"] = str(cov_data_path)
 
     while True:
         try:
