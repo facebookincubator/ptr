@@ -702,6 +702,8 @@ async def _test_runner(
         else None
     )
     env = _set_build_env(extra_build_env_path)
+    # TODO: Remove COVERAGE_FILE once coverage < 5.0 becomes less used
+    env["COVERAGE_FILE"] = str(cov_data_path)
     env["DATA_FILE"] = str(cov_data_path)
 
     while True:
