@@ -702,9 +702,9 @@ async def _test_runner(
         else None
     )
     env = _set_build_env(extra_build_env_path)
-    # TODO: Remove COVERAGE_FILE once coverage < 5.0 becomes less used
-    env["COVERAGE_FILE"] = str(cov_data_path)
-    env["DATA_FILE"] = str(cov_data_path)
+    need_cov_env_var = await _using_coverage_5(venv_path)
+    if not need_cov_env_var:
+        env["COVERAGE_FILE"] = str(cov_data_path)
 
     while True:
         try:
@@ -743,6 +743,18 @@ async def _test_runner(
         stats["suite.{}_completed_steps".format(stats_name)] = steps_ran
 
         queue.task_done()
+
+
+async def _using_coverage_5(venv_path: Path, timeout: float = 5) -> bool:
+    """ Check coverage version and set the correct environment var """
+    version_sub_str = "version 5."
+    if WINDOWS:
+        cov_exe = venv_path / "Scripts" / "coverage.exe"
+    else:
+        cov_exe = venv_path / "bin" / "coverage"
+
+    stdout, _stderr = await _gen_check_output((str(cov_exe), "--help"), timeout=timeout)
+    return version_sub_str in stdout.decode("utf-8")
 
 
 async def create_venv(
