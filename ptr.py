@@ -781,10 +781,6 @@ async def create_venv(
         _set_pip_mirror(venv_path, mirror)
         if install_pkgs:
             install_cmd = [str(pip_exe), "install"]
-            # TODO: Workout why Windows can't uninstall / upgrade pip on Azure
-            # https://github.com/facebookincubator/ptr/issues/33
-            if not WINDOWS:
-                install_cmd.append("--upgrade")
             install_cmd.extend(CONFIG["ptr"]["venv_pkgs"].split())
             await _gen_check_output(install_cmd, timeout=timeout)
     except CalledProcessError as cpe:
