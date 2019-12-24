@@ -1119,14 +1119,14 @@ def main() -> None:
         help="Force any disabled tests suites to run",
     )
     parser.add_argument(
-        "--system-site-packages",
-        action="store_true",
-        help="Give the virtual environment access to the system site-packages dir",
-    )
-    parser.add_argument(
         "--stats-file",
         default=str(default_stats_file),
         help="JSON statistics file [Default: {}]".format(default_stats_file),
+    )
+    parser.add_argument(
+        "--system-site-packages",
+        action="store_true",
+        help="Give the virtual environment access to the system site-packages dir",
     )
     parser.add_argument("--venv", help="Path to venv to reuse")
     parser.add_argument(
