@@ -278,7 +278,7 @@ class TestPtr(unittest.TestCase):
         config = {"test_suite": "dummy_test.base"}
         self.assertEqual(
             ptr._generate_test_suite_cmd(coverage_exe, config),
-            (str(coverage_exe), "run", "--parallel-mode", "-m", config["test_suite"]),
+            (str(coverage_exe), "run", "-m", config["test_suite"]),
         )
         config = {}
         self.assertEqual(ptr._generate_test_suite_cmd(coverage_exe, config), ())
