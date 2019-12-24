@@ -57,7 +57,7 @@ For **faster runs** when testing, it is recommended to reuse a Virtual Environme
 usage: ptr.py [-h] [-a ATONCE] [-b BASE_DIR] [-d] [-e] [-k] [-m MIRROR]
               [--print-cov] [--print-non-configured]
               [--progress-interval PROGRESS_INTERVAL] [--run-disabled]
-              [--stats-file STATS_FILE] [--venv VENV]
+              [--system-site-packages] [--stats-file STATS_FILE] [--venv VENV]
               [--venv-timeout VENV_TIMEOUT]
 
 optional arguments:
@@ -69,7 +69,8 @@ optional arguments:
                         /Users/cooper/repos/ptr]
   -d, --debug           Verbose debug output
   -e, --error-on-warnings
-                        Have Python warnings raise DeprecationWarning
+                        Have Python warnings raise DeprecationWarning on tests
+                        run
   -k, --keep-venv       Do not remove created venv
   -m MIRROR, --mirror MIRROR
                         URL for pip to use for Simple API [Default:
@@ -81,6 +82,9 @@ optional arguments:
                         Seconds between status update on test running
                         [Default: Disabled]
   --run-disabled        Force any disabled tests suites to run
+  --system-site-packages
+                        Give the virtual environment access to the system
+                        site-packages dir
   --stats-file STATS_FILE
                         JSON statistics file [Default: /var/folders/tc/hbwxh76
                         j1hn6gqjd2n2sjn4j9k1glp/T/ptr_stats_12510]
