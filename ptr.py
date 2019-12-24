@@ -282,7 +282,7 @@ def _generate_install_cmd(
 
 def _generate_test_suite_cmd(coverage_exe: Path, config: Dict) -> Tuple[str, ...]:
     if config.get("test_suite", False):
-        return (str(coverage_exe), "run", "-m", config["test_suite"])
+        return (str(coverage_exe), "run", "--parallel-mode", "-m", config["test_suite"])
     return ()
 
 
@@ -681,26 +681,18 @@ async def _test_runner(
     error_on_warnings: bool,
     idx: int,
 ) -> None:
-
-    # Set a unique location for coverage to write its data file per coroutine
-    cov_data_path = Path(gettempdir()) / f"ptr.{getpid()}.{idx}.coverage"
     extra_build_env_path = (
         Path(CONFIG["ptr"]["extra_build_env_prefix"])
         if "extra_build_env_prefix" in CONFIG["ptr"]
         else None
     )
     env = _set_build_env(extra_build_env_path)
-    need_cov_env_var = await _using_coverage_5(venv_path)
-    if not need_cov_env_var:
-        env["COVERAGE_FILE"] = str(cov_data_path)
 
     while True:
         try:
             setup_py_path = queue.get_nowait()
         except asyncio.QueueEmpty:
-            LOG.debug(f"test_runner {idx} exiting")
-            if cov_data_path.exists():
-                cov_data_path.unlink()
+            LOG.debug("test_runner {} exiting".format(idx))
             return
 
         test_run_start_time = int(time())
@@ -731,18 +723,6 @@ async def _test_runner(
         stats[f"suite.{stats_name}_completed_steps"] = steps_ran
 
         queue.task_done()
-
-
-async def _using_coverage_5(venv_path: Path, timeout: float = 5) -> bool:
-    """ Check coverage version and set the correct environment var """
-    version_sub_str = "version 5."
-    if WINDOWS:
-        cov_exe = venv_path / "Scripts" / "coverage.exe"
-    else:
-        cov_exe = venv_path / "bin" / "coverage"
-
-    stdout, _stderr = await _gen_check_output((str(cov_exe), "--help"), timeout=timeout)
-    return version_sub_str in stdout.decode("utf-8")
 
 
 async def create_venv(
