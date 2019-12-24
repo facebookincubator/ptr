@@ -1119,6 +1119,11 @@ def main() -> None:
         help="Force any disabled tests suites to run",
     )
     parser.add_argument(
+        "--system-site-packages",
+        action="store_true",
+        help="Give the virtual environment access to the system site-packages dir",
+    )
+    parser.add_argument(
         "--stats-file",
         default=str(default_stats_file),
         help="JSON statistics file [Default: {}]".format(default_stats_file),
@@ -1131,11 +1136,6 @@ def main() -> None:
         help="Timeout in seconds for venv creation + deps install [Default: {}]".format(
             VENV_TIMEOUT
         ),
-    )
-    parser.add_argument(
-        "--system-site-packages",
-        action="store_true",
-        help="Give the virtual environment access to the system site-packages dir.",
     )
     args = parser.parse_args()
     _handle_debug(args.debug)

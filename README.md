@@ -81,6 +81,9 @@ optional arguments:
                         Seconds between status update on test running
                         [Default: Disabled]
   --run-disabled        Force any disabled tests suites to run
+  --system-site-packages
+                        Give the virtual environment access to the system
+                        site-packages dir
   --stats-file STATS_FILE
                         JSON statistics file [Default: /var/folders/tc/hbwxh76
                         j1hn6gqjd2n2sjn4j9k1glp/T/ptr_stats_12510]
