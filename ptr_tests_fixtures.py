@@ -42,7 +42,7 @@ EXPECTED_COVERAGE_FAIL_RESULT = test_result(
     returncode=3,
     output=(
         "The following files did not meet coverage requirements:\n"
-        + "  unittest{}ptr.py: 69 < 99 - Missing: 70-72, 76-94, 98\n".format(sep)
+        + f"  unittest{sep}ptr.py: 69 < 99 - Missing: 70-72, 76-94, 98\n"
     ),
     runtime=0,
     timeout=False,
@@ -51,9 +51,7 @@ EXPECTED_PTR_COVERAGE_FAIL_RESULT = test_result(
     setup_py_path=Path("unittest/setup.py"),
     returncode=3,
     output=(
-        "The following files did not meet coverage requirements:\n  tg{}tg.py: ".format(
-            sep
-        )
+        f"The following files did not meet coverage requirements:\n  tg{sep}tg.py: "
         + "22 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  "
         + "TOTAL: 40 < 99 - Missing: \n"
     ),
@@ -111,7 +109,7 @@ TOTAL                                84     14    99%
     sep=sep
 )
 
-HARD_SET_VENV = Path("{}/ptr_venv_2580217".format(gettempdir()))
+HARD_SET_VENV = Path(f"{gettempdir()}/ptr_venv_2580217")
 BASE_VENV_PATH = (
     Path(environ["VIRTUAL_ENV"]) if "VIRTUAL_ENV" in environ else HARD_SET_VENV
 )

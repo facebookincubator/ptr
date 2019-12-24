@@ -22,14 +22,14 @@ def check_ptr_stats_json(stats_file: Path) -> int:
     stats_errors = 0
 
     if not stats_file.exists():
-        print("{} stats file does not exist".format(stats_file))
+        print(f"{stats_file} stats file does not exist")
         return 68
 
     try:
         with stats_file.open("r") as sfp:
             stats_json = json.load(sfp)
     except json.JSONDecodeError as jde:
-        print("Stats JSON Error: {}".format(jde))
+        print(f"Stats JSON Error: {jde}")
         return 69
 
     # Lets always print JSON to help debug any failures and have JSON history
@@ -37,7 +37,7 @@ def check_ptr_stats_json(stats_file: Path) -> int:
 
     any_fail = int(stats_json["total.fails"]) + int(stats_json["total.timeouts"])
     if any_fail:
-        print("Stats report {} fails/timeouts".format(any_fail), file=sys.stderr)
+        print(f"Stats report {any_fail} fails/timeouts", file=sys.stderr)
         return any_fail
 
     if int(stats_json["total.setup_pys"]) > 1:
@@ -57,7 +57,7 @@ def check_ptr_stats_json(stats_file: Path) -> int:
         print("We didn't get coverage stats for all ptr files + total", file=sys.stderr)
         stats_errors += 1
 
-    print("Stats check found {} error(s)".format(stats_errors))
+    print(f"Stats check found {stats_errors} error(s)")
 
     return stats_errors
 
@@ -87,12 +87,12 @@ def integration_test() -> int:
 def ci(show_env: bool = False) -> int:
     # Output exact python version
     cp = run(("python", "-V"), check=True, stdout=PIPE, universal_newlines=True)
-    print("Using {}".format(cp.stdout), file=sys.stderr)
+    print(f"Using {cp.stdout}", file=sys.stderr)
 
     if show_env:
         print("- Environment:", file=sys.stderr)
         for key in sorted(environ.keys()):
-            print("{}: {}".format(key, environ[key]), file=sys.stderr)
+            print(f"{key}: {environ[key]}", file=sys.stderr)
 
     # Azure sets CI_ENV=PTR_INTEGRATION
     # Travis sets PTR_INTEGRATION=1

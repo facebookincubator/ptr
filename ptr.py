@@ -57,14 +57,14 @@ def _config_read(
 ) -> ConfigParser:
     """ Look from cwd to / for a "conf_name" file - If so read it in """
     cwd_path = Path(cwd)  # type: Path
-    root_path = Path("{}\\".format(cwd_path.drive)) if WINDOWS else Path("/")
+    root_path = Path(f"{cwd_path.drive}\\") if WINDOWS else Path("/")
 
     while cwd_path:
         ptrconfig_path = cwd_path / conf_name
         if ptrconfig_path.exists():
             cp.read(str(ptrconfig_path))
 
-            LOG.info("Loading found config @ {}".format(ptrconfig_path))
+            LOG.info(f"Loading found config @ {ptrconfig_path}")
             break
 
         if cwd_path == root_path:
@@ -113,7 +113,7 @@ def _get_site_packages_path(venv_path: Path) -> Optional[Path]:
         if apath.is_dir() and apath.name == "site-packages":
             return apath
 
-    LOG.error("Unable to find a python lib dir in {}".format(lib_path))
+    LOG.error(f"Unable to find a python lib dir in {lib_path}")
     return None
 
 
@@ -140,7 +140,7 @@ def _analyze_coverage(
         )
         return None
     if not required_cov:
-        LOG.error("No required coverage to enforce for {}".format(setup_py_path))
+        LOG.error(f"No required coverage to enforce for {setup_py_path}")
         return None
 
     coverage_lines = {}
@@ -168,9 +168,7 @@ def _analyze_coverage(
 
         if not module_path_str:
             LOG.error(
-                "[{}] Unable to find path relative path for {}".format(
-                    setup_py_path, sl[0]
-                )
+                f"[{setup_py_path}] Unable to find path relative path for {sl[0]}"
             )
             continue
 
@@ -185,10 +183,10 @@ def _analyze_coverage(
 
         if sl[0] != "TOTAL":
             stats[
-                "suite.{}_coverage.file.{}".format(module_path.name, module_path_str)
+                f"suite.{module_path.name}_coverage.file.{module_path_str}"
             ] = coverage_lines[module_path_str].cover
         else:
-            stats["suite.{}_coverage.total".format(module_path.name)] = coverage_lines[
+            stats[f"suite.{module_path.name}_coverage.total"] = coverage_lines[
                 module_path_str
             ].cover
 
@@ -263,9 +261,7 @@ def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
             dump(stats, sfp, indent=2, sort_keys=True)
     except OSError as ose:
         LOG.exception(
-            "Unable to write out JSON statistics file to {} ({})".format(
-                stats_file, ose
-            )
+            f"Unable to write out JSON statistics file to {stats_file} ({ose})"
         )
 
 
@@ -294,7 +290,7 @@ def _generate_mypy_cmd(
     module_dir: Path, mypy_exe: Path, config: Dict
 ) -> Tuple[str, ...]:
     if config.get("run_mypy", False):
-        mypy_entry_point = module_dir / "{}.py".format(config["entry_point_module"])
+        mypy_entry_point = module_dir / f"{config['entry_point_module']}.py"
     else:
         return ()
 
@@ -348,7 +344,7 @@ def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
     with setup_py.open("r", encoding="utf8") as sp:
         setup_tree = ast.parse(sp.read())
 
-    LOG.debug("AST visiting {}".format(setup_py))
+    LOG.debug(f"AST visiting {setup_py}")
     for node in ast.walk(setup_tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
@@ -357,7 +353,7 @@ def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
                     continue
 
                 if target_id == "ptr_params":
-                    LOG.debug("Found ptr_params in {}".format(setup_py))
+                    LOG.debug(f"Found ptr_params in {setup_py}")
                     return dict(ast.literal_eval(node.value))
     return {}
 
@@ -380,9 +376,7 @@ def _get_test_modules(
     non_configured_modules = []  # type: List[Path]
     test_modules = {}  # type: Dict[Path, Dict]
     for setup_py in all_setup_pys:
-        disabled_err_msg = "Not running {} as ptr is disabled via config".format(
-            setup_py
-        )
+        disabled_err_msg = f"Not running {setup_py} as ptr is disabled via config"
         # If a setup.cfg exists lets prefer it, if there is a [ptr] section
         ptr_params = parse_setup_cfg(setup_py)
         if not ptr_params:
@@ -423,7 +417,7 @@ def _validate_base_dir(base_dir: str) -> Path:
         base_dir_path = Path(CWD) / base_dir_path
 
     if not base_dir_path.exists():
-        LOG.error("{} does not exit. Not running tests".format(base_dir))
+        LOG.error(f"{base_dir} does not exit. Not running tests")
         sys.exit(69)
 
     return base_dir_path
@@ -479,9 +473,7 @@ def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
     if not build_base_path or not build_base_path.exists():
         if build_base_path:
             LOG.error(
-                "Configured local build env path {} does not exist".format(
-                    build_base_path
-                )
+                f"Configured local build env path {build_base_path} does not exist"
             )
         return build_environ
 
@@ -500,7 +492,7 @@ def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
 
         for var_name, value in build_env_vars:
             if var_name in build_environ:
-                build_environ[var_name] = "{}:{}".format(value, build_environ[var_name])
+                build_environ[var_name] = f"{value}:{build_environ[var_name]}"
             else:
                 build_environ[var_name] = str(value)
     else:
@@ -533,13 +525,13 @@ async def _test_steps_runner(  # pylint: disable=R0914
 ) -> Tuple[Optional[test_result], int]:
     bin_dir = "Scripts" if WINDOWS else "bin"
     exe = ".exe" if WINDOWS else ""
-    black_exe = venv_path / bin_dir / "black{}".format(exe)
-    coverage_exe = venv_path / bin_dir / "coverage{}".format(exe)
-    flake8_exe = venv_path / bin_dir / "flake8{}".format(exe)
-    mypy_exe = venv_path / bin_dir / "mypy{}".format(exe)
-    pip_exe = venv_path / bin_dir / "pip{}".format(exe)
-    pylint_exe = venv_path / bin_dir / "pylint{}".format(exe)
-    pyre_exe = venv_path / bin_dir / "pyre{}".format(exe)
+    black_exe = venv_path / bin_dir / f"black{exe}"
+    coverage_exe = venv_path / bin_dir / f"coverage{exe}"
+    flake8_exe = venv_path / bin_dir / f"flake8{exe}"
+    mypy_exe = venv_path / bin_dir / f"mypy{exe}"
+    pip_exe = venv_path / bin_dir / f"pip{exe}"
+    pylint_exe = venv_path / bin_dir / f"pylint{exe}"
+    pyre_exe = venv_path / bin_dir / f"pyre{exe}"
     config = tests_to_run[setup_py_path]
 
     steps = (
@@ -547,14 +539,14 @@ async def _test_steps_runner(  # pylint: disable=R0914
             StepName.pip_install,
             True,
             _generate_install_cmd(str(pip_exe), str(setup_py_path.parent), config),
-            "Installing {} + deps".format(setup_py_path),
+            f"Installing {setup_py_path} + deps",
             config["test_suite_timeout"],
         ),
         step(
             StepName.tests_run,
             bool("test_suite" in config and config["test_suite"]),
             _generate_test_suite_cmd(coverage_exe, config),
-            "Running {} tests via coverage".format(config.get("test_suite", "")),
+            f"Running {config.get('test_suite', '')} tests via coverage",
             config["test_suite_timeout"],
         ),
         step(
@@ -565,35 +557,35 @@ async def _test_steps_runner(  # pylint: disable=R0914
                 and len(config["required_coverage"]) > 0
             ),
             (str(coverage_exe), "report", "-m"),
-            "Analyzing coverage report for {}".format(setup_py_path),
+            f"Analyzing coverage report for {setup_py_path}",
             config["test_suite_timeout"],
         ),
         step(
             StepName.mypy_run,
             bool("run_mypy" in config and config["run_mypy"]),
             _generate_mypy_cmd(setup_py_path.parent, mypy_exe, config),
-            "Running mypy for {}".format(setup_py_path),
+            f"Running mypy for {setup_py_path}",
             config["test_suite_timeout"],
         ),
         step(
             StepName.black_run,
             bool("run_black" in config and config["run_black"]),
             _generate_black_cmd(setup_py_path.parent, black_exe),
-            "Running black for {}".format(setup_py_path),
+            f"Running black for {setup_py_path}",
             config["test_suite_timeout"],
         ),
         step(
             StepName.flake8_run,
             bool("run_flake8" in config and config["run_flake8"]),
             _generate_flake8_cmd(setup_py_path.parent, flake8_exe, config),
-            "Running flake8 for {}".format(setup_py_path),
+            f"Running flake8 for {setup_py_path}",
             config["test_suite_timeout"],
         ),
         step(
             StepName.pylint_run,
             bool("run_pylint" in config and config["run_pylint"]),
             _generate_pylint_cmd(setup_py_path.parent, pylint_exe, config),
-            "Running pylint for {}".format(setup_py_path),
+            f"Running pylint for {setup_py_path}",
             config["test_suite_timeout"],
         ),
         step(
@@ -605,7 +597,7 @@ async def _test_steps_runner(  # pylint: disable=R0914
                 and not GREATER_THAN_37
             ),
             _generate_pyre_cmd(setup_py_path.parent, pyre_exe, config),
-            "Running pyre for {}".format(setup_py_path),
+            f"Running pyre for {setup_py_path}",
             config["test_suite_timeout"],
         ),
     )
@@ -615,7 +607,7 @@ async def _test_steps_runner(  # pylint: disable=R0914
         a_test_result = None
         # Skip test if disabled
         if not a_step.run_condition:
-            LOG.info("Not running {} step".format(a_step.log_message))
+            LOG.info(f"Not running {a_step.log_message} step")
             continue
 
         LOG.info(a_step.log_message)
@@ -623,24 +615,24 @@ async def _test_steps_runner(  # pylint: disable=R0914
         steps_ran += 1
         try:
             if a_step.cmds:
-                LOG.debug("CMD: {}".format(" ".join(a_step.cmds)))
+                LOG.debug(f"CMD: {' '.join(a_step.cmds)}")
 
                 # If we're running tests and we want warnings to be errors
                 step_env = env
                 if a_step.step_name == StepName.tests_run and error_on_warnings:
                     step_env = env.copy()
                     step_env["PYTHONWARNINGS"] = "error"
-                    LOG.debug("Setting PYTHONWARNINGS to error: {}".format(step_env))
+                    LOG.debug(f"Setting PYTHONWARNINGS to error: {step_env}")
 
                 stdout, _stderr = await _gen_check_output(
                     a_step.cmds, a_step.timeout, env=step_env, cwd=setup_py_path.parent
                 )
             else:
-                LOG.debug("Skipping running a cmd for {} step".format(a_step))
+                LOG.debug(f"Skipping running a cmd for {a_step} step")
         except CalledProcessError as cpe:
             err_output = cpe.stdout.decode("utf8")
 
-            LOG.debug("{} FAILED for {}".format(a_step.log_message, setup_py_path))
+            LOG.debug(f"{a_step.log_message} FAILED for {setup_py_path}")
             a_test_result = test_result(
                 setup_py_path,
                 a_step.step_name.value,
@@ -649,15 +641,11 @@ async def _test_steps_runner(  # pylint: disable=R0914
                 False,
             )
         except asyncio.TimeoutError as toe:
-            LOG.debug(
-                "{} timed out running {} ({})".format(
-                    setup_py_path, a_step.log_message, toe
-                )
-            )
+            LOG.debug(f"{setup_py_path} timed out running {a_step.log_message} ({toe})")
             a_test_result = test_result(
                 setup_py_path,
                 a_step.step_name.value,
-                "Timeout during {}".format(a_step.log_message),
+                f"Timeout during {a_step.log_message}",
                 a_step.timeout,
                 True,
             )
@@ -665,7 +653,7 @@ async def _test_steps_runner(  # pylint: disable=R0914
         if a_step.step_name is StepName.analyze_coverage:
             cov_report = stdout.decode("utf8") if stdout else ""
             if print_cov:
-                print("{}:\n{}".format(setup_py_path, cov_report))
+                print(f"{setup_py_path}:\n{cov_report}")
 
             if a_step.run_condition:
                 a_test_result = _analyze_coverage(
@@ -695,7 +683,7 @@ async def _test_runner(
 ) -> None:
 
     # Set a unique location for coverage to write its data file per coroutine
-    cov_data_path = Path(gettempdir()) / "ptr.{}.{}.coverage".format(getpid(), idx)
+    cov_data_path = Path(gettempdir()) / f"ptr.{getpid()}.{idx}.coverage"
     extra_build_env_path = (
         Path(CONFIG["ptr"]["extra_build_env_prefix"])
         if "extra_build_env_prefix" in CONFIG["ptr"]
@@ -710,7 +698,7 @@ async def _test_runner(
         try:
             setup_py_path = queue.get_nowait()
         except asyncio.QueueEmpty:
-            LOG.debug("test_runner {} exiting".format(idx))
+            LOG.debug(f"test_runner {idx} exiting")
             if cov_data_path.exists():
                 cov_data_path.unlink()
             return
@@ -730,7 +718,7 @@ async def _test_runner(
         if test_fail_result:
             test_results.append(test_fail_result)
         else:
-            success_output = "{} has passed all configured tests".format(setup_py_path)
+            success_output = f"{setup_py_path} has passed all configured tests"
             LOG.info(success_output)
             test_results.append(
                 test_result(
@@ -739,8 +727,8 @@ async def _test_runner(
             )
 
         stats_name = setup_py_path.parent.name
-        stats["suite.{}_runtime".format(stats_name)] = total_success_runtime
-        stats["suite.{}_completed_steps".format(stats_name)] = steps_ran
+        stats[f"suite.{stats_name}_runtime"] = total_success_runtime
+        stats[f"suite.{stats_name}_completed_steps"] = steps_ran
 
         queue.task_done()
 
@@ -765,7 +753,7 @@ async def create_venv(
     system_site_packages: bool = False,
 ) -> Optional[Path]:
     start_time = time()
-    venv_path = Path(gettempdir()) / "ptr_venv_{}".format(getpid())
+    venv_path = Path(gettempdir()) / f"ptr_venv_{getpid()}"
     if WINDOWS:
         pip_exe = venv_path / "Scripts" / "pip.exe"
     else:
@@ -784,19 +772,15 @@ async def create_venv(
             install_cmd.extend(CONFIG["ptr"]["venv_pkgs"].split())
             await _gen_check_output(install_cmd, timeout=timeout)
     except CalledProcessError as cpe:
-        LOG.exception(
-            "Failed to setup venv @ {} - '{}'' ({})".format(venv_path, install_cmd, cpe)
-        )
+        LOG.exception(f"Failed to setup venv @ {venv_path} - '{install_cmd}'' ({cpe})")
         if cpe.stderr:
-            LOG.debug("venv stderr:\n{}".format(cpe.stderr.decode("utf8")))
+            LOG.debug(f"venv stderr:\n{cpe.stderr.decode('utf8')}")
         if cpe.output:
-            LOG.debug("venv stdout:\n{}".format(cpe.output.decode("utf8")))
+            LOG.debug(f"venv stdout:\n{cpe.output.decode('utf8')}")
         return None
 
     runtime = int(time() - start_time)
-    LOG.info(
-        "Successfully created venv @ {} to run tests ({}s)".format(venv_path, runtime)
-    )
+    LOG.info(f"Successfully created venv @ {venv_path} to run tests ({runtime}s)")
     return venv_path
 
 
@@ -825,9 +809,7 @@ def _recursive_find_files(
             if directory.match(exclude_pattern):
                 skip_dir = True
                 LOG.debug(
-                    "Skipping {} due to exclude pattern {}".format(
-                        directory, exclude_pattern
-                    )
+                    f"Skipping {directory} due to exclude pattern {exclude_pattern}"
                 )
         if not skip_dir:
             _recursive_find_files(files, directory, exclude_patterns, follow_symlinks)
@@ -873,9 +855,9 @@ def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
 
 
 def print_non_configured_modules(modules: List[Path]) -> None:
-    print("== {} non ptr configured modules ==".format(len(modules)))
+    print(f"== {len(modules)} non ptr configured modules ==")
     for module in sorted(modules):
-        print(" - {}".format(str(module)))
+        print(f" - {str(module)}")
 
 
 def print_test_results(
@@ -900,7 +882,7 @@ def print_test_results(
             stats["total.passes"] += 1
 
     total_time = -1 if "runtime.all_tests" not in stats else stats["runtime.all_tests"]
-    print("-- Summary (total time {}s):\n".format(total_time))
+    print(f"-- Summary (total time {total_time}s):\n")
     # TODO: Hardcode some workaround to ensure Windows always prints UTF8
     # https://github.com/facebookincubator/ptr/issues/34
     print(
@@ -984,9 +966,7 @@ async def run_tests(
         for i in range(atonce)
     ]
     if progress_interval:
-        LOG.debug(
-            "Adding progress reporter to report every {}s".format(progress_interval)
-        )
+        LOG.debug(f"Adding progress reporter to report every {progress_interval}s")
         consumers.append(
             _progress_reporter(progress_interval, queue, len(tests_to_run))
         )
@@ -1002,7 +982,7 @@ async def run_tests(
         chdir(gettempdir())
         rmtree(str(venv_path))
     else:
-        LOG.info("Not removing venv @ {} due to CLI arguments".format(venv_path))
+        LOG.info(f"Not removing venv @ {venv_path} due to CLI arguments")
 
     return stats["total.fails"] + stats["total.timeouts"]
 
@@ -1028,9 +1008,7 @@ async def async_main(
     )
     if not tests_to_run:
         LOG.error(
-            "{} has no setup.py files with unit tests defined. Exiting".format(
-                str(base_path)
-            )
+            f"{str(base_path)} has no setup.py files with unit tests defined. Exiting"
         )
         return 1
 
@@ -1040,7 +1018,7 @@ async def async_main(
     try:
         venv_path = Path(venv)  # type: Optional[Path]
         if venv_path and not venv_path.exists():
-            LOG.error("{} venv does not exist. Please correct!".format(venv_path))
+            LOG.error(f"{venv_path} venv does not exist. Please correct!")
             return 2
     except TypeError:
         venv_path = None
@@ -1062,22 +1040,20 @@ async def async_main(
 
 
 def main() -> None:
-    default_stats_file = Path(gettempdir()) / "ptr_stats_{}".format(getpid())
+    default_stats_file = Path(gettempdir()) / f"ptr_stats_{getpid()}"
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-a",
         "--atonce",
         default=int(CONFIG["ptr"]["atonce"]),
         type=int,
-        help="How many tests to run at once [Default: {}]".format(
-            int(CONFIG["ptr"]["atonce"])
-        ),
+        help=f"How many tests to run at once [Default: {int(CONFIG['ptr']['atonce'])}]",
     )
     parser.add_argument(
         "-b",
         "--base-dir",
         default=CWD,
-        help="Path to recursively look for setup.py files [Default: {}]".format(CWD),
+        help=f"Path to recursively look for setup.py files [Default: {CWD}]",
     )
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Verbose debug output"
@@ -1126,7 +1102,7 @@ def main() -> None:
     parser.add_argument(
         "--stats-file",
         default=str(default_stats_file),
-        help="JSON statistics file [Default: {}]".format(default_stats_file),
+        help=f"JSON statistics file [Default: {default_stats_file}]",
     )
     parser.add_argument("--venv", help="Path to venv to reuse")
     parser.add_argument(
@@ -1140,7 +1116,7 @@ def main() -> None:
     args = parser.parse_args()
     _handle_debug(args.debug)
 
-    LOG.info("Starting {}".format(sys.argv[0]))
+    LOG.info(f"Starting {sys.argv[0]}")
     loop = asyncio.get_event_loop()
     try:
         sys.exit(

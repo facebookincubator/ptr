@@ -150,7 +150,7 @@ class TestPtr(unittest.TestCase):
     def test_mac_osx_slash_private(self) -> None:
         macosx = ptr.MACOSX
         non_private_path_str = "/var/tmp"
-        private_path_str = "/private{}".format(non_private_path_str)
+        private_path_str = f"/private{non_private_path_str}"
         site_packages_path = Path("/var/tmp/venv/lib/site-packages/")
         try:
             ptr.MACOSX = False
