@@ -57,19 +57,20 @@ For **faster runs** when testing, it is recommended to reuse a Virtual Environme
 usage: ptr.py [-h] [-a ATONCE] [-b BASE_DIR] [-d] [-e] [-k] [-m MIRROR]
               [--print-cov] [--print-non-configured]
               [--progress-interval PROGRESS_INTERVAL] [--run-disabled]
-              [--stats-file STATS_FILE] [--venv VENV]
+              [--system-site-packages] [--stats-file STATS_FILE] [--venv VENV]
               [--venv-timeout VENV_TIMEOUT]
 
 optional arguments:
   -h, --help            show this help message and exit
   -a ATONCE, --atonce ATONCE
-                        How many tests to run at once [Default: 6]
+                        How many tests to run at once [Default: 4]
   -b BASE_DIR, --base-dir BASE_DIR
                         Path to recursively look for setup.py files [Default:
-                        /Users/cooper/repos/ptr]
+                        /Users/omikader/ptr]
   -d, --debug           Verbose debug output
   -e, --error-on-warnings
-                        Have Python warnings raise DeprecationWarning
+                        Have Python warnings raise DeprecationWarning on tests
+                        run
   -k, --keep-venv       Do not remove created venv
   -m MIRROR, --mirror MIRROR
                         URL for pip to use for Simple API [Default:
@@ -85,8 +86,8 @@ optional arguments:
                         Give the virtual environment access to the system
                         site-packages dir
   --stats-file STATS_FILE
-                        JSON statistics file [Default: /var/folders/tc/hbwxh76
-                        j1hn6gqjd2n2sjn4j9k1glp/T/ptr_stats_12510]
+                        JSON statistics file [Default: /var/folders/5z/l_7ngdr
+                        j6r9d9xbgp1rz8dt4qyd8yn/T/ptr_stats_41761]
   --venv VENV           Path to venv to reuse
   --venv-timeout VENV_TIMEOUT
                         Timeout in seconds for venv creation + deps install
