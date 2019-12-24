@@ -63,10 +63,10 @@ usage: ptr.py [-h] [-a ATONCE] [-b BASE_DIR] [-d] [-e] [-k] [-m MIRROR]
 optional arguments:
   -h, --help            show this help message and exit
   -a ATONCE, --atonce ATONCE
-                        How many tests to run at once [Default: 4]
+                        How many tests to run at once [Default: 6]
   -b BASE_DIR, --base-dir BASE_DIR
                         Path to recursively look for setup.py files [Default:
-                        /Users/omikader/ptr]
+                        /Users/cooper/repos/ptr]
   -d, --debug           Verbose debug output
   -e, --error-on-warnings
                         Have Python warnings raise DeprecationWarning on tests
@@ -86,8 +86,8 @@ optional arguments:
                         Give the virtual environment access to the system
                         site-packages dir
   --stats-file STATS_FILE
-                        JSON statistics file [Default: /var/folders/5z/l_7ngdr
-                        j6r9d9xbgp1rz8dt4qyd8yn/T/ptr_stats_41761]
+                        JSON statistics file [Default: /var/folders/tc/hbwxh76
+                        j1hn6gqjd2n2sjn4j9k1glp/T/ptr_stats_12510]
   --venv VENV           Path to venv to reuse
   --venv-timeout VENV_TIMEOUT
                         Timeout in seconds for venv creation + deps install
