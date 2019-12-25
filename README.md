@@ -331,7 +331,7 @@ ptr.py:602:25 Undefined name [18]: Global name `stdout` is not defined, or there
 
 ### Q. How do I get specific version of black, coverage, mypy etc.?
 
-- Just simply hard set the version in the .ptrconfig in your repo
+- Just simply hard set the version in the .ptrconfig in your repo or use `requirements.txt` to pre-install before running `ptr`
 - All `pip` [PEP 440 version specifiers](https://www.python.org/dev/peps/pep-0440/) are supported
 
 ### Q. Why is the venv creation so slow?
@@ -345,6 +345,12 @@ ptr.py:602:25 Undefined name [18]: Global name `stdout` is not defined, or there
 ### Q. Why is ptr not able to run `pyre` on Windows?
 
 - `pyre` (pyre-check on PyPI) does not ship a Windows wheel with the ocaml pyre.bin
+
+
+### Q. Why do you depend on >= coverage 5.0.1
+
+- `coverage` 5.0 introduced using sqlite and we don't want to have a mix of 4.x and 5.x for ptr
+- < 5.0 could possibly still work as we now ensure to run each projects tests from setup_py.parent CWD with subprocess
 
 
 # Contact or join the ptr community 💬
