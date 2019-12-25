@@ -2,6 +2,17 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2019.12.25
+
+Codename: **Vernon Hills, IL 🎅**
+
+*@cooperlees visiting girlfriend's family in IL*
+
+- Fix documentation for some new arguments - Thanks @omikader
+- Windows now defaults to updating pip + setuptools
+- Rely on setting current working directory with subprocess and remove coverage file environment setting
+- f-string everything via [flynt](https://pypi.org/project/flynt/) now we're >= 3.6
+
 ### 2019.12.13
 
 Codename: **College Park, MD 🐢**
