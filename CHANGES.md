@@ -2,6 +2,14 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2020.2.26
+
+Codename: **Month after Straya Day 🇦🇺**🇺
+
+*1 month since @cooperlees was in AU for Australia day!*
+
+- Enable pyre for Python 3.8 now it's fully supported
+
 ### 2019.12.25
 
 Codename: **Vernon Hills, IL 🎅**
