@@ -338,7 +338,7 @@ class TestPtr(unittest.TestCase):
 
             conf = {"run_pyre": True}
             expected = (str(pyre_exe), "--source-directory", str(td_path), "check")
-            if ptr.WINDOWS or ptr.GREATER_THAN_37:
+            if ptr.WINDOWS:
                 expected = ()
             self.assertEqual(ptr._generate_pyre_cmd(td_path, pyre_exe, conf), expected)
 
@@ -486,8 +486,8 @@ class TestPtr(unittest.TestCase):
             fake_venv_path = td_path / "unittest_venv"
             fake_venv_lib_path = fake_venv_path / "lib"
             fake_venv_lib_path.mkdir(parents=True)
-            # Windows + Python 3.8 will not run pyre
-            no_pyre = ptr.WINDOWS or ptr.GREATER_THAN_37
+            # Windows can not run pyre
+            no_pyre = ptr.WINDOWS
             tsr_params = [
                 69,  # test_start_time
                 {fake_setup_py: {}},  # tests_to_run
