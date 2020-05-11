@@ -919,9 +919,7 @@ async def run_tests(
     # Be at the base of the venv to ensure we have a known neutral cwd
     chdir(str(venv_path))
 
-    # Create Awaitables and run all sorted tests in parallel to be more predictable
-    # Python 3.5 does not have queue type
-    queue = asyncio.Queue()  # type: asyncio.Queue
+    queue: asyncio.Queue = asyncio.Queue()
     for test_setup_py in sorted(tests_to_run.keys()):
         await queue.put(test_setup_py)
 
