@@ -360,3 +360,8 @@ See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## License
 `ptr` is MIT licensed, as found in the [LICENSE file](LICENSE).
+
+## Terms of Use + Privacy Policy
+
+- [Terms of Use](https://opensource.facebook.com/legal/terms)
+- [Privacy Policy](https://opensource.facebook.com/legal/privacy)
