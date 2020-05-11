@@ -427,8 +427,8 @@ class TestPtr(unittest.TestCase):
             TOTAL_REPORTER_TESTS -= 1
             return TOTAL_REPORTER_TESTS
 
-        queue = asyncio.Queue()  # type: asyncio.Queue
-        queue.qsize = qsize  # noqa
+        queue: asyncio.Queue = asyncio.Queue()
+        queue.qsize = qsize  # noqa type: ignore
 
         self.loop.run_until_complete(
             ptr._progress_reporter(0.1, queue, int(TOTAL_REPORTER_TESTS / 2))
@@ -457,7 +457,7 @@ class TestPtr(unittest.TestCase):
 
     @patch("ptr._test_steps_runner", fake_test_steps_runner)
     def test_test_runner(self) -> None:
-        queue = asyncio.Queue()  # type: asyncio.Queue
+        queue: asyncio.Queue = asyncio.Queue()
         with TemporaryDirectory() as td:
             td_path = Path(td)
             setup_py_path = td_path / "setup.py"
