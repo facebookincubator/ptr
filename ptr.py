@@ -133,9 +133,8 @@ def _analyze_coverage(
 
     if not coverage_report:
         LOG.error(
-            "No coverage report for {} - Unable to enforce coverage requirements".format(
-                setup_py_path
-            )
+            f"No coverage report for {setup_py_path} - Unable to enforce coverage"
+            " requirements"
         )
         return None
     if not required_cov:
@@ -234,10 +233,10 @@ def _analyze_coverage(
 def _max_osx_private_handle(
     potenital_path: str, site_packages_path: Path
 ) -> Optional[Path]:
-    """ On Mac OS X `coverage` seems to always resolve /private for anything stored in /var.
-        ptr's usage of gettempdir() seems to result in using dirs within there
-        This function strips /private if it exists on the path supplied from coverage
-        ONLY IF site_packages_path is not based in /private"""
+    """On Mac OS X `coverage` seems to always resolve /private for anything stored in /var.
+    ptr's usage of gettempdir() seems to result in using dirs within there
+    This function strips /private if it exists on the path supplied from coverage
+    ONLY IF site_packages_path is not based in /private"""
     if not MACOSX:
         return Path(potenital_path)
 
@@ -1081,8 +1080,9 @@ def main() -> None:
         "--venv-timeout",
         type=int,
         default=VENV_TIMEOUT,
-        help="Timeout in seconds for venv creation + deps install [Default: {}]".format(
-            VENV_TIMEOUT
+        help=(
+            "Timeout in seconds for venv creation + deps install [Default:"
+            f" {VENV_TIMEOUT}]"
         ),
     )
     args = parser.parse_args()
