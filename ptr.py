@@ -444,7 +444,7 @@ async def _gen_check_output(
     if process.returncode != 0:
         cmd_str = " ".join(cmd)
         raise CalledProcessError(
-            process.returncode, cmd_str, output=stdout, stderr=stderr
+            process.returncode or -1, cmd_str, output=stdout, stderr=stderr
         )
 
     return (stdout, stderr)
