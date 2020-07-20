@@ -1,4 +1,11 @@
-Thanks for logging an issue with `ptr`. Here are some questions to help try 
+---
+name: Bug report
+about: Create a report to help us improve
+labels: bug
+
+---
+
+Thanks for logging an issue with `ptr`. Here are some questions to help try
 and pull out as much information possible to help us help you!
 
 ## How is `ptr` not doing what you expect?
