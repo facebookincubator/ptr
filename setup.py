@@ -53,7 +53,7 @@ setup(
     description="Parallel asyncio Python setup.(cfg|py) Test Runner",
     long_description=get_long_desc(),
     long_description_content_type="text/markdown",
-    py_modules=["ptr", "ptr_tests", "ptr_tests_fixtures"],
+    py_modules=["ptr"],
     url="http://github.com/facebookincubator/ptr",
     author="Cooper Lees",
     author_email="me@cooperlees.com",
