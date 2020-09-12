@@ -612,10 +612,13 @@ async def _test_steps_runner(  # pylint: disable=R0914
 
                 # If we're running tests and we want warnings to be errors
                 step_env = env
-                if a_step.step_name == StepName.tests_run and error_on_warnings:
+                if a_step.step_name in [StepName.tests_run, StepName.pyre_run]:
                     step_env = env.copy()
+                    step_env["PYTHONPATH"] = getcwd()
+
+                if a_step.step_name == StepName.tests_run and error_on_warnings:
                     step_env["PYTHONWARNINGS"] = "error"
-                    LOG.debug(f"Setting PYTHONWARNINGS to error: {step_env}")
+                    LOG.debug("Setting PYTHONWARNINGS to error")
 
                 stdout, _stderr = await _gen_check_output(
                     a_step.cmds, a_step.timeout, env=step_env, cwd=setup_py_path.parent
