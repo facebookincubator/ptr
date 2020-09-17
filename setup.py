@@ -30,7 +30,9 @@ ptr_params = {
     # Run pylint or not
     "run_pylint": True,
     # Run pyre or not
-    "run_pyre": True,
+    # Disabled as it seems pyre is not venv friendly
+    # https://github.com/facebook/pyre-check/issues/316
+    "run_pyre": False,
 }
 
 
