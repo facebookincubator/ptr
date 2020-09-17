@@ -487,7 +487,10 @@ class TestPtr(unittest.TestCase):
             fake_venv_lib_path = fake_venv_path / "lib"
             fake_venv_lib_path.mkdir(parents=True)
             # Windows can not run pyre
-            no_pyre = ptr.WINDOWS
+            # no_pyre = ptr.WINDOWS
+            # Nothing can run pyre at the moment
+            # https://github.com/facebook/pyre-check/issues/316
+            no_pyre = True
             tsr_params = [
                 69,  # test_start_time
                 {fake_setup_py: {}},  # tests_to_run
