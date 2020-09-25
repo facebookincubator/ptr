@@ -427,12 +427,11 @@ class TestPtr(unittest.TestCase):
             TOTAL_REPORTER_TESTS -= 1
             return TOTAL_REPORTER_TESTS
 
-        queue: asyncio.Queue = asyncio.Queue()
-        queue.qsize = qsize  # noqa type: ignore
-
-        self.loop.run_until_complete(
-            ptr._progress_reporter(0.1, queue, int(TOTAL_REPORTER_TESTS / 2))
-        )
+        with patch("asyncio.Queue.qsize", qsize):
+            queue: asyncio.Queue = asyncio.Queue()
+            self.loop.run_until_complete(
+                ptr._progress_reporter(0.1, queue, int(TOTAL_REPORTER_TESTS / 2))
+            )
         self.assertEqual(mock_log.call_count, 2)
 
     def test_set_build_env(self) -> None:
@@ -487,10 +486,7 @@ class TestPtr(unittest.TestCase):
             fake_venv_lib_path = fake_venv_path / "lib"
             fake_venv_lib_path.mkdir(parents=True)
             # Windows can not run pyre
-            # no_pyre = ptr.WINDOWS
-            # Nothing can run pyre at the moment
-            # https://github.com/facebook/pyre-check/issues/316
-            no_pyre = True
+            no_pyre = ptr.WINDOWS
             tsr_params = [
                 69,  # test_start_time
                 {fake_setup_py: {}},  # tests_to_run

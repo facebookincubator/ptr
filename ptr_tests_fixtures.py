@@ -34,7 +34,7 @@ EXPECTED_TEST_PARAMS = {
     "run_mypy": True,
     "run_flake8": True,
     "run_pylint": True,
-    "run_pyre": False,
+    "run_pyre": True,
 }
 
 EXPECTED_COVERAGE_FAIL_RESULT = test_result(
@@ -210,7 +210,7 @@ run_black = true
 run_mypy = true
 run_flake8 = true
 run_pylint = true
-run_pyre = false
+run_pyre = true
 """
 
 SAMPLE_SETUP_PY_PTR = {
