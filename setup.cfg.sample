@@ -9,4 +9,4 @@ run_black = true
 run_mypy = true
 run_flake8 = true
 run_pylint = true
-run_pyre = false
+run_pyre = true
