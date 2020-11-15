@@ -33,7 +33,7 @@ EXPECTED_TEST_PARAMS = {
     "run_black": True,
     "run_mypy": True,
     "run_flake8": True,
-    "run_pylint": True,
+    "run_pylint": False,
     "run_pyre": True,
 }
 
@@ -209,7 +209,7 @@ required_coverage_TOTAL = 90
 run_black = true
 run_mypy = true
 run_flake8 = true
-run_pylint = true
+run_pylint = false
 run_pyre = true
 """
 
