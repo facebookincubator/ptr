@@ -27,8 +27,8 @@ ptr_params = {
     "run_mypy": True,
     # Run flake8 or not
     "run_flake8": True,
-    # Run pylint or not
-    "run_pylint": True,
+    # Run pylint or not - Disabled until 3.9 Support
+    "run_pylint": False,
     # Run pyre or not
     "run_pyre": True,
 }
@@ -64,6 +64,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     python_requires=">=3.6",
     install_requires=None,
