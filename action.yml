@@ -1,0 +1,9 @@
+name: "ptr"
+description: "Python test runner."
+author: "Facebook, Inc."
+branding:
+  color: "yellow"
+  icon: "arrow-right"
+runs:
+  using: "docker"
+  image: "Dockerfile"
