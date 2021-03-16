@@ -1,0 +1,41 @@
+name: ptr_ci_latest
+ 
+on: [push, pull_request]
+ 
+jobs:
+  build:
+    name: bandersnatch CI python ${{ matrix.python-version }} on ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.10-dev]
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: deadsnakes/action@v2.1.1
+        with:
+          python-version: ${{ matrix.python-version }}
+          debug: true
+ 
+      - name: Print Python Version
+        run: python --version --version && which python
+ 
+      - name: Install latest pip, setuptools + tox
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+
+      - name: Run Unitests via coverage
+        run: |
+          coverage run ptr_tests.py
+
+      - name: Show coverage
+        run: |
+          coverage report
+
+      - name: Run ptr CI
+        env:
+         PTR_INTEGRATION: 1
+         pythonioencoding: utf-8
+        run: |
+          python ci.py
