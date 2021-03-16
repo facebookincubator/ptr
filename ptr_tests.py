@@ -118,6 +118,19 @@ class TestPtr(unittest.TestCase):
             ptr_tests_fixtures.EXPECTED_COVERAGE_FAIL_RESULT,
         )
 
+        # Test with float coverage
+        self.assertEqual(
+            ptr._analyze_coverage(
+                fake_venv_path,
+                fake_setup_py,
+                ptr_tests_fixtures.FAKE_REQ_COVERAGE,
+                ptr_tests_fixtures.SAMPLE_FLOAT_REPORT_OUTPUT,
+                {},
+                0,
+            ),
+            ptr_tests_fixtures.EXPECTED_COVERAGE_FAIL_RESULT,
+        )
+
         # Test with venv installed modules
         cov_report = (
             ptr_tests_fixtures.SAMPLE_WIN_TG_REPORT_OUTPUT

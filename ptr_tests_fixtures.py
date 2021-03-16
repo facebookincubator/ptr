@@ -11,6 +11,7 @@ from os.path import sep
 from pathlib import Path
 from sys import version_info
 from tempfile import gettempdir
+from typing import Dict
 
 from ptr import test_result
 
@@ -42,7 +43,7 @@ EXPECTED_COVERAGE_FAIL_RESULT = test_result(
     returncode=3,
     output=(
         "The following files did not meet coverage requirements:\n"
-        + f"  unittest{sep}ptr.py: 69 < 99 - Missing: 70-72, 76-94, 98\n"
+        + f"  unittest{sep}ptr.py: 69.0 < 99.0 - Missing: 70-72, 76-94, 98\n"
     ),
     runtime=0,
     timeout=False,
@@ -52,8 +53,8 @@ EXPECTED_PTR_COVERAGE_FAIL_RESULT = test_result(
     returncode=3,
     output=(
         f"The following files did not meet coverage requirements:\n  tg{sep}tg.py: "
-        + "22 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  "
-        + "TOTAL: 40 < 99 - Missing: \n"
+        + "22.0 < 99 - Missing: 39-59, 62-73, 121, 145-149, 153-225, 231-234, 238\n  "
+        + "TOTAL: 40.0 < 99 - Missing: \n"
     ),
     runtime=0,
     timeout=False,
@@ -93,8 +94,8 @@ EXPECTED_COVERAGE_RESULTS = [
     ),
 ]
 
-FAKE_REQ_COVERAGE = {str(Path("unittest/ptr.py")): 99, "TOTAL": 99}
-FAKE_TG_REQ_COVERAGE = {str(Path("tg/tg.py")): 99, "TOTAL": 99}
+FAKE_REQ_COVERAGE = {str(Path("unittest/ptr.py")): 99.0, "TOTAL": 99}
+FAKE_TG_REQ_COVERAGE: Dict[str, float] = {str(Path("tg/tg.py")): 99, "TOTAL": 99}
 
 
 SAMPLE_REPORT_OUTPUT = """\
@@ -105,6 +106,18 @@ unittest{sep}ptr_tests.py               24      0     100%
 unittest{sep}ptr_venv_fixtures.py        1      0     100%
 ------------------------------------------------------------------
 TOTAL                                84     14    99%
+""".format(
+    sep=sep
+)
+
+SAMPLE_FLOAT_REPORT_OUTPUT = """\
+Name                                Stmts   Miss  Cover   Missing
+------------------------------------------------------------------
+unittest{sep}ptr.py                     59     14     69.00%     70-72, 76-94, 98
+unittest{sep}ptr_tests.py               24      0     100.00%
+unittest{sep}ptr_venv_fixtures.py        1      0     100.00%
+------------------------------------------------------------------
+TOTAL                                84     14    99.00%
 """.format(
     sep=sep
 )
