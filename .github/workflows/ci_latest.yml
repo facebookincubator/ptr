@@ -34,9 +34,10 @@ jobs:
         run: |
           coverage report
 
-      - name: Run ptr CI
-        env:
-         PTR_INTEGRATION: 1
-         pythonioencoding: utf-8
-        run: |
-          python ci.py
+# typed-ast builds fail - pydebug.h missing
+#      - name: Run ptr CI
+#        env:
+#         PTR_INTEGRATION: 1
+#         pythonioencoding: utf-8
+#        run: |
+#          python ci.py
