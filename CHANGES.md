@@ -2,6 +2,18 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2021.3.16
+
+Codename: **Wildwood 🪵**
+
+*First release from my South Lake Tahoe residence*
+
+- Support floats for coverage comparisions in `required_coverage` - PR #108
+- Change `--print-cov` to work when `required_coverage` does not exist in ptr config - PR #109
+- Move tests out of install but include in sdist - PR #99 - Thanks @jayvdb
+- Test with 3.10 alphas via deadsnakes - PR #110
+- Misc f-string + lint/typing fixes
+
 ### 2020.2.26
 
 Codename: **Month after Straya Day 🇦🇺**🇺
