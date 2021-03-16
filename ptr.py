@@ -52,9 +52,12 @@ def _config_default() -> ConfigParser:
 
 
 def _config_read(
-    cwd: str, conf_name: str = ".ptrconfig", cp: ConfigParser = _config_default()
+    cwd: str, conf_name: str = ".ptrconfig", cp: Optional[ConfigParser] = None
 ) -> ConfigParser:
     """ Look from cwd to / for a "conf_name" file - If so read it in """
+    if cp is None:
+        cp = _config_default()
+
     cwd_path = Path(cwd)  # type: Path
     root_path = Path(f"{cwd_path.drive}\\") if WINDOWS else Path("/")
 
@@ -116,10 +119,14 @@ def _get_site_packages_path(venv_path: Path) -> Optional[Path]:
     return None
 
 
+def _remove_pct_symbol(pct_str: str) -> str:
+    return pct_str.strip().replace("%", "")
+
+
 def _analyze_coverage(
     venv_path: Path,
     setup_py_path: Path,
-    required_cov: Dict[str, int],
+    required_cov: Dict[str, float],
     coverage_report: str,
     stats: Dict[str, int],
     test_run_start_time: float,
@@ -172,11 +179,11 @@ def _analyze_coverage(
 
         if len(sl) == 4:
             coverage_lines[module_path_str] = coverage_line(
-                int(sl[1]), int(sl[2]), int(sl[3][:-1]), ""
+                float(sl[1]), float(sl[2]), float(_remove_pct_symbol(sl[3])), ""
             )
         else:
             coverage_lines[module_path_str] = coverage_line(
-                int(sl[1]), int(sl[2]), int(sl[3][:-1]), sl[4]
+                float(sl[1]), float(sl[2]), float(_remove_pct_symbol(sl[3])), sl[4]
             )
 
         if sl[0] != "TOTAL":
