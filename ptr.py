@@ -557,9 +557,12 @@ async def _test_steps_runner(  # pylint: disable=R0914
         step(
             StepName.analyze_coverage,
             bool(
-                "required_coverage" in config
-                and config["required_coverage"]
-                and len(config["required_coverage"]) > 0
+                print_cov
+                or (
+                    "required_coverage" in config
+                    and config["required_coverage"]
+                    and len(config["required_coverage"]) > 0
+                )
             ),
             (str(coverage_exe), "report", "-m"),
             f"Analyzing coverage report for {setup_py_path}",
@@ -657,6 +660,9 @@ async def _test_steps_runner(  # pylint: disable=R0914
             cov_report = stdout.decode("utf8") if stdout else ""
             if print_cov:
                 print(f"{setup_py_path}:\n{cov_report}")
+                if "required_coverage" not in config:
+                    # Add fake 0% TOTAL coverage required so step passes
+                    config["required_coverage"] = {"TOTAL": 0}
 
             if a_step.run_condition:
                 a_test_result = _analyze_coverage(
@@ -667,6 +673,7 @@ async def _test_steps_runner(  # pylint: disable=R0914
                     stats,
                     test_run_start_time,
                 )
+
         # If we've had a failure return
         if a_test_result:
             return a_test_result, steps_ran

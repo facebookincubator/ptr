@@ -521,15 +521,28 @@ class TestPtr(unittest.TestCase):
                 (None, 6) if no_pyre else (None, 7),
             )
 
+            # Test we run coverage when required_coverage does not exist
+            # but we have print_cov True
+            etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
+            del etp["required_coverage"]
+            tsr_params[1] = {fake_setup_py: etp}
+            tsr_params[7] = True
+            self.assertEqual(
+                self.loop.run_until_complete(
+                    ptr._test_steps_runner(*tsr_params)  # pyre-ignore
+                ),
+                (None, 6) if no_pyre else (None, 7),
+            )
+
+            return None  # COOPER
+
             # Run everything but black + no print cov
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
             del etp["run_black"]
             tsr_params[1] = {fake_setup_py: etp}
             tsr_params[7] = False
             self.assertEqual(
-                self.loop.run_until_complete(
-                    ptr._test_steps_runner(*tsr_params)  # pyre-ignore
-                ),
+                self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
                 (None, 5) if no_pyre else (None, 6),
             )
 
@@ -541,9 +554,7 @@ class TestPtr(unittest.TestCase):
             tsr_params[1] = {fake_setup_py: etp}
             tsr_params[7] = True
             self.assertEqual(
-                self.loop.run_until_complete(
-                    ptr._test_steps_runner(*tsr_params)  # pyre-ignore
-                ),
+                self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
                 expected_no_pyre_tests,
             )
 
