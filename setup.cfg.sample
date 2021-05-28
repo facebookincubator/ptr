@@ -5,6 +5,7 @@ test_suite_timeout = 120
 # `required_coverage_` will be stripped for use
 required_coverage_ptr.py = 85.0
 required_coverage_TOTAL = 89
+run_usort = true
 run_black = true
 run_mypy = true
 run_flake8 = true

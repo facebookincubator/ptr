@@ -37,9 +37,9 @@ if sys.platform == "win32":
 
 def _config_default() -> ConfigParser:
     if WINDOWS:
-        venv_pkgs = "black coverage flake8 mypy pip pylint setuptools"
+        venv_pkgs = "black coverage flake8 mypy pip pylint setuptools usort"
     else:
-        venv_pkgs = "black coverage flake8 mypy pip pylint pyre-check setuptools"
+        venv_pkgs = "black coverage flake8 mypy pip pylint pyre-check setuptools usort"
 
     LOG.info("Using default config settings")
     cp = ConfigParser()
@@ -54,7 +54,7 @@ def _config_default() -> ConfigParser:
 def _config_read(
     cwd: str, conf_name: str = ".ptrconfig", cp: Optional[ConfigParser] = None
 ) -> ConfigParser:
-    """ Look from cwd to / for a "conf_name" file - If so read it in """
+    """Look from cwd to / for a "conf_name" file - If so read it in"""
     if cp is None:
         cp = _config_default()
 
@@ -92,10 +92,11 @@ class StepName(Enum):
     tests_run = 2
     analyze_coverage = 3
     mypy_run = 4
-    black_run = 5
-    pylint_run = 6
-    flake8_run = 7
-    pyre_run = 8
+    usort_run = 5
+    black_run = 6
+    pylint_run = 7
+    flake8_run = 8
+    pyre_run = 9
 
 
 coverage_line = namedtuple("coverage_line", ["stmts", "miss", "cover", "missing"])
@@ -345,6 +346,18 @@ def _generate_pyre_cmd(
     return (str(pyre_exe), "--source-directory", str(module_dir), "check")
 
 
+def _generate_usort_cmd(
+    module_dir: Path, usort_exe: Path, config: Dict
+) -> Tuple[str, ...]:
+    if not config.get("run_usort", False):
+        return ()
+
+    py_files = set()  # type: Set[str]
+    find_py_files(py_files, module_dir)
+
+    return (str(usort_exe), "check", *sorted(py_files))
+
+
 def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
     with setup_py.open("r", encoding="utf8") as sp:
         setup_tree = ast.parse(sp.read())
@@ -537,6 +550,7 @@ async def _test_steps_runner(  # pylint: disable=R0914
     pip_exe = venv_path / bin_dir / f"pip{exe}"
     pylint_exe = venv_path / bin_dir / f"pylint{exe}"
     pyre_exe = venv_path / bin_dir / f"pyre{exe}"
+    usort_exe = venv_path / bin_dir / f"usort{exe}"
     config = tests_to_run[setup_py_path]
 
     steps = (
@@ -573,6 +587,13 @@ async def _test_steps_runner(  # pylint: disable=R0914
             bool("run_mypy" in config and config["run_mypy"]),
             _generate_mypy_cmd(setup_py_path.parent, mypy_exe, config),
             f"Running mypy for {setup_py_path}",
+            config["test_suite_timeout"],
+        ),
+        step(
+            StepName.usort_run,
+            bool("run_usort" in config and config["run_usort"]),
+            _generate_usort_cmd(setup_py_path.parent, usort_exe, config),
+            f"Running usort for {setup_py_path}",
             config["test_suite_timeout"],
         ),
         step(

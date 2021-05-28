@@ -2,6 +2,15 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2021.5.28
+
+Codename: **Memorial Day 🇺**
+
+*Release on Memorial Day long weekend*
+
+- Add usort to the family of CI options
+  - https://pypi.org/project/usort/
+
 ### 2021.3.16
 
 Codename: **Wildwood 🪵**

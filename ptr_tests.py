@@ -518,7 +518,7 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 6) if no_pyre else (None, 7),
+                (None, 7) if no_pyre else (None, 8),
             )
 
             # Test we run coverage when required_coverage does not exist
@@ -531,10 +531,8 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 6) if no_pyre else (None, 7),
+                (None, 7) if no_pyre else (None, 8),
             )
-
-            return None  # COOPER
 
             # Run everything but black + no print cov
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
@@ -542,24 +540,26 @@ class TestPtr(unittest.TestCase):
             tsr_params[1] = {fake_setup_py: etp}
             tsr_params[7] = False
             self.assertEqual(
+                # pyre-ignore[6]: Tests ...
                 self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
-                (None, 5) if no_pyre else (None, 6),
+                (None, 6) if no_pyre else (None, 7),
             )
 
             # Run everything but test_suite with print_cov
-            expected_no_pyre_tests = (None, 4) if no_pyre else (None, 5)
+            expected_no_pyre_tests = (None, 6) if no_pyre else (None, 7)
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
             del etp["test_suite"]
             del etp["required_coverage"]
             tsr_params[1] = {fake_setup_py: etp}
             tsr_params[7] = True
             self.assertEqual(
+                # pyre-ignore[6]: Tests ...
                 self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
                 expected_no_pyre_tests,
             )
 
-            # Ensure we've "printed coverage"
-            self.assertEqual(mock_print.call_count, 1)
+            # Ensure we've "printed coverage" the 3 times we expect
+            self.assertEqual(mock_print.call_count, 3)
 
     def test_validate_base_dir(self) -> None:
         path_str = gettempdir()

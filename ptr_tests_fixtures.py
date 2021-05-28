@@ -31,6 +31,7 @@ EXPECTED_TEST_PARAMS = {
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
     "required_coverage": {"ptr.py": 85, "TOTAL": 89},
+    "run_usort": True,
     "run_black": True,
     "run_mypy": True,
     "run_flake8": True,
@@ -219,6 +220,7 @@ test_suite = ptr_tests
 test_suite_timeout = 120
 required_coverage_ptr.py = 85
 required_coverage_TOTAL = 89
+run_usort = true
 run_black = true
 run_mypy = true
 run_flake8 = true

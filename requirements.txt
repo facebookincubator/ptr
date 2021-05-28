@@ -6,3 +6,4 @@ pip
 pylint
 pyre-check
 setuptools
+usort
