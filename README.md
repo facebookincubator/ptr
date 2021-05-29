@@ -317,6 +317,33 @@ cooper-mbp1:ptr cooper$ /tmp/tp/bin/ptr --venv /var/folders/tc/hbwxh76j1hn6gqjd2
 ptr.py:602:25 Undefined name [18]: Global name `stdout` is not defined, or there is at least one control flow path that doesn't define `stdout`.
 ```
 
+### usort
+
+If your imports are not making `usort` happy it would look like this:
+
+```
+[2021-05-29 09:30:56,044] INFO: Starting /tmp/tp/bin/ptr (ptr.py:1129)
+[2021-05-29 09:30:56,051] INFO: Installing /Users/cooper/repos/ptr/setup.py + deps (ptr.py:637)
+[2021-05-29 09:30:56,587] INFO: Running ptr_tests tests via coverage (ptr.py:637)
+[2021-05-29 09:30:58,238] INFO: Analyzing coverage report for /Users/cooper/repos/ptr/setup.py (ptr.py:637)
+[2021-05-29 09:30:58,341] INFO: Running mypy for /Users/cooper/repos/ptr/setup.py (ptr.py:637)
+[2021-05-29 09:30:58,436] INFO: Running usort for /Users/cooper/repos/ptr/setup.py (ptr.py:637)
+-- Summary (total time 2s):
+
+✅ PASS: 0
+❌ FAIL: 1
+ ️⌛ TIMEOUT: 0
+🔒 DISABLED: 0
+💩 TOTAL: 1
+
+-- 1 / 1 (100%) `setup.py`'s have `ptr` tests running
+
+-- Failure Output --
+
+/Users/cooper/repos/ptr/setup.py (failed 'usort_run' step):
+Would sort /Users/cooper/repos/ptr/setup.py
+```
+
 # FAQ ⁉️
 
 ### Q. How do I debug? I need output!
