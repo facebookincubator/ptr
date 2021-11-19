@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Copyright © Meta Platforms, Inc
 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -182,7 +182,7 @@ TOTAL                                                    3982   2391    40%
 
 SAMPLE_SETUP_PY = """\
 #!/usr/bin/env python3
-# Copyright 2004-present Facebook. All Rights Reserved.
+# Copyright © Meta Platforms, Inc
 
 from setuptools import setup
 

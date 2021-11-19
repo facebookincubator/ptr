@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+# Copyright © Meta Platforms, Inc
 
 # Simple script to build and release via twine to PyPI
 

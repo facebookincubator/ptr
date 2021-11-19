@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Copyright © Meta Platforms, Inc
 # coding=utf8
 # pyre-ignore-all-errors
 
