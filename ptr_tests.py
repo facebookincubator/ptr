@@ -13,6 +13,7 @@ from os import environ
 from pathlib import Path
 from shutil import rmtree
 from subprocess import CalledProcessError
+from sys import version_info
 from tempfile import TemporaryDirectory, gettempdir
 from typing import (  # noqa: F401 # pylint: disable=unused-import
     Any,
@@ -30,6 +31,8 @@ import ptr_tests_fixtures
 
 # Turn off logging for unit tests - Comment out to enable
 ptr.LOG = Mock()
+# To make unittests do different things for newer and older runtimes
+PY_310_OR_GREATER = version_info >= (3, 10)
 # Hacky global for a monkey patch of asyncio.qsize()
 TOTAL_REPORTER_TESTS = 4
 
@@ -70,11 +73,22 @@ def touch_files(*paths: Path) -> None:
         path.touch(exist_ok=True)
 
 
+# TODO: Rewrite using all latest asyncio testing tools
+# once our lowest supported version is high that 3.6 (probably 3.8)
 class TestPtr(unittest.TestCase):
     maxDiff = 2000
 
     def setUp(self) -> None:
-        self.loop = asyncio.new_event_loop()
+        if PY_310_OR_GREATER:
+            self.loop = asyncio.new_event_loop()
+        else:
+            self.loop = asyncio.get_event_loop()
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        if PY_310_OR_GREATER:
+            self.loop.close()
+        return super().tearDown()
 
     @patch("ptr._get_site_packages_path")
     def test_analyze_coverage_errors(self, mock_path: Mock) -> None:
