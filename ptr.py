@@ -1149,7 +1149,10 @@ def main() -> None:
         args.error_on_warnings,
         args.system_site_packages,
     )
-    if getattr(asyncio, "run", None):
+    # This is gated to >= 3.8 for unittests
+    # Once we're >= 3.7 tests could be refactored so we can use
+    # asyncio.run in 3.7
+    if getattr(asyncio, "run", None) and PY_38_OR_GREATER:
         sys.exit(asyncio.run(main_coro))
     else:
         loop = asyncio.get_event_loop()
