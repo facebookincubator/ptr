@@ -4,6 +4,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 # coding=utf8
+# Can remove once we're >= 3.7 so asyncio has a .run() method
+# pyre-ignore-all-errors[0]
+# pyre-ignore-all-errors[16]
 
 import argparse
 import ast
@@ -1146,7 +1149,7 @@ def main() -> None:
         args.error_on_warnings,
         args.system_site_packages,
     )
-    if PY_38_OR_GREATER:
+    if getattr(asyncio, "run", None):
         sys.exit(asyncio.run(main_coro))
     else:
         loop = asyncio.get_event_loop()

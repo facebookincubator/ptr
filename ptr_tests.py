@@ -409,13 +409,18 @@ class TestPtr(unittest.TestCase):
         self.assertEqual(ptr._handle_debug(True), True)
 
     @patch("ptr.asyncio.get_event_loop", fake_get_event_loop)
-    @patch("ptr.asyncio.run", fake_get_event_loop)
     @patch("ptr.async_main", return_zero)
     @patch("ptr._validate_base_dir")
     @patch("ptr.argparse.ArgumentParser.parse_args")
     def test_main(self, mock_args: Mock, mock_validate: Mock) -> None:
-        with self.assertRaises(SystemExit):
-            ptr.main()
+        # Can't mock stdlib functions that don't exist in older cpython
+        if ptr.PY_38_OR_GREATER:
+            with patch("ptr.asyncio.run") as mock_run, self.assertRaises(SystemExit):
+                ptr.main()
+                self.assertTrue(mock_run.called)
+        else:
+            with self.assertRaises(SystemExit):
+                ptr.main()
 
     def test_parse_setup_cfg(self) -> None:
         tmp_dir = Path(gettempdir())
