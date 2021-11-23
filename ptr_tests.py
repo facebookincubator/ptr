@@ -27,7 +27,6 @@ from unittest.mock import Mock, patch
 import ptr
 import ptr_tests_fixtures
 
-
 # Turn off logging for unit tests - Comment out to enable
 ptr.LOG = Mock()
 # Hacky global for a monkey patch of asyncio.qsize()
@@ -70,11 +69,22 @@ def touch_files(*paths: Path) -> None:
         path.touch(exist_ok=True)
 
 
+# TODO: Rewrite using all latest asyncio testing tools
+# once our lowest supported version is higher than 3.6 (probably 3.8)
 class TestPtr(unittest.TestCase):
     maxDiff = 2000
 
     def setUp(self) -> None:
-        self.loop = asyncio.get_event_loop()
+        if ptr.PY_38_OR_GREATER:
+            self.loop = asyncio.new_event_loop()
+        else:
+            self.loop = asyncio.get_event_loop()
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        if ptr.PY_38_OR_GREATER:
+            self.loop.close()
+        return super().tearDown()
 
     @patch("ptr._get_site_packages_path")
     def test_analyze_coverage_errors(self, mock_path: Mock) -> None:
@@ -403,8 +413,14 @@ class TestPtr(unittest.TestCase):
     @patch("ptr._validate_base_dir")
     @patch("ptr.argparse.ArgumentParser.parse_args")
     def test_main(self, mock_args: Mock, mock_validate: Mock) -> None:
-        with self.assertRaises(SystemExit):
-            ptr.main()
+        # Can't mock stdlib functions that don't exist in older cpython
+        if ptr.PY_38_OR_GREATER:
+            with patch("ptr.asyncio.run") as mock_run, self.assertRaises(SystemExit):
+                ptr.main()
+                self.assertTrue(mock_run.called)
+        else:
+            with self.assertRaises(SystemExit):
+                ptr.main()
 
     def test_parse_setup_cfg(self) -> None:
         tmp_dir = Path(gettempdir())

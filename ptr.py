@@ -4,6 +4,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 # coding=utf8
+# Can remove once we're >= 3.7 so asyncio has a .run() method
+# pyre-ignore-all-errors[0]
+# pyre-ignore-all-errors[16]
 
 import argparse
 import ast
@@ -27,6 +30,10 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 LOG = logging.getLogger(__name__)
 MACOSX = system() == "Darwin"
+# To make main use asyncio.run and unittests to test approrpiately for older cpython
+# Using 3.8 rather than 3.7 due to subprocess.exec in < 3.8 only support main loop
+# https://bugs.python.org/issue35621
+PY_38_OR_GREATER = sys.version_info >= (3, 8)
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
 # Need to use sys.platform for mypy to understand
@@ -334,7 +341,7 @@ def _generate_pylint_cmd(
     pylint_config = module_dir / ".pylint"
     if pylint_config.exists():
         cmds.extend(["--rcfile", str(pylint_config)])
-    return (*cmds, *sorted(py_files))
+    return tuple([*cmds, *sorted(py_files)])
 
 
 def _generate_pyre_cmd(
@@ -1127,29 +1134,32 @@ def main() -> None:
     _handle_debug(args.debug)
 
     LOG.info(f"Starting {sys.argv[0]}")
-    loop = asyncio.get_event_loop()
-    try:
-        sys.exit(
-            loop.run_until_complete(
-                async_main(
-                    args.atonce,
-                    _validate_base_dir(args.base_dir),
-                    args.mirror,
-                    args.progress_interval,
-                    args.venv,
-                    args.keep_venv,
-                    args.print_cov,
-                    args.print_non_configured,
-                    args.run_disabled,
-                    args.stats_file,
-                    args.venv_timeout,
-                    args.error_on_warnings,
-                    args.system_site_packages,
-                )
-            )
-        )
-    finally:
-        loop.close()
+    main_coro = async_main(
+        args.atonce,
+        _validate_base_dir(args.base_dir),
+        args.mirror,
+        args.progress_interval,
+        args.venv,
+        args.keep_venv,
+        args.print_cov,
+        args.print_non_configured,
+        args.run_disabled,
+        args.stats_file,
+        args.venv_timeout,
+        args.error_on_warnings,
+        args.system_site_packages,
+    )
+    # This is gated to >= 3.8 for unittests
+    # Once we're >= 3.7 tests could be refactored so we can use
+    # asyncio.run in 3.7
+    if getattr(asyncio, "run", None) and PY_38_OR_GREATER:
+        sys.exit(asyncio.run(main_coro))
+    else:
+        loop = asyncio.get_event_loop()
+        try:
+            sys.exit(loop.run_until_complete(main_coro))
+        finally:
+            loop.close()
 
 
 if __name__ == "__main__":

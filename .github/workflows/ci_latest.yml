@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.10-dev]
+        python-version: [3.11-dev]
         os: [ubuntu-latest]
 
     steps:
@@ -34,10 +34,9 @@ jobs:
         run: |
           coverage report
 
-# typed-ast builds fail - pydebug.h missing
-#      - name: Run ptr CI
-#        env:
-#         PTR_INTEGRATION: 1
-#         pythonioencoding: utf-8
-#        run: |
-#          python ci.py
+      - name: Run ptr CI
+        env:
+         PTR_INTEGRATION: 1
+         pythonioencoding: utf-8
+        run: |
+          python ci.py
