@@ -334,7 +334,7 @@ def _generate_pylint_cmd(
     pylint_config = module_dir / ".pylint"
     if pylint_config.exists():
         cmds.extend(["--rcfile", str(pylint_config)])
-    return (*cmds, *sorted(py_files))
+    return tuple([*cmds, *sorted(py_files)])
 
 
 def _generate_pyre_cmd(

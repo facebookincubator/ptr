@@ -74,7 +74,7 @@ class TestPtr(unittest.TestCase):
     maxDiff = 2000
 
     def setUp(self) -> None:
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
 
     @patch("ptr._get_site_packages_path")
     def test_analyze_coverage_errors(self, mock_path: Mock) -> None:
