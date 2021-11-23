@@ -27,6 +27,8 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 LOG = logging.getLogger(__name__)
 MACOSX = system() == "Darwin"
+# To make unittests do different things for newer and older runtimes
+PY_37_OR_GREATER = sys.version_info >= (3, 7)
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
 # Need to use sys.platform for mypy to understand
@@ -1127,29 +1129,29 @@ def main() -> None:
     _handle_debug(args.debug)
 
     LOG.info(f"Starting {sys.argv[0]}")
-    loop = asyncio.get_event_loop()
-    try:
-        sys.exit(
-            loop.run_until_complete(
-                async_main(
-                    args.atonce,
-                    _validate_base_dir(args.base_dir),
-                    args.mirror,
-                    args.progress_interval,
-                    args.venv,
-                    args.keep_venv,
-                    args.print_cov,
-                    args.print_non_configured,
-                    args.run_disabled,
-                    args.stats_file,
-                    args.venv_timeout,
-                    args.error_on_warnings,
-                    args.system_site_packages,
-                )
-            )
-        )
-    finally:
-        loop.close()
+    main_coro = async_main(
+        args.atonce,
+        _validate_base_dir(args.base_dir),
+        args.mirror,
+        args.progress_interval,
+        args.venv,
+        args.keep_venv,
+        args.print_cov,
+        args.print_non_configured,
+        args.run_disabled,
+        args.stats_file,
+        args.venv_timeout,
+        args.error_on_warnings,
+        args.system_site_packages,
+    )
+    if PY_37_OR_GREATER:
+        sys.exit(asyncio.run(main_coro))
+    else:
+        loop = asyncio.get_event_loop()
+        try:
+            sys.exit(loop.run_until_complete(main_coro))
+        finally:
+            loop.close()
 
 
 if __name__ == "__main__":
