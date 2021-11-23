@@ -74,7 +74,7 @@ def touch_files(*paths: Path) -> None:
 
 
 # TODO: Rewrite using all latest asyncio testing tools
-# once our lowest supported version is high that 3.6 (probably 3.8)
+# once our lowest supported version is higher than 3.6 (probably 3.8)
 class TestPtr(unittest.TestCase):
     maxDiff = 2000
 
