@@ -2,6 +2,16 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2021.11.23
+
+Codename: **A 🅰️**
+
+*Release to support 'Three dot Ten' and A == 10 in hexidecimal*
+
+- Add Official Support and CI for Python 3.10
+  - This will be the last release *(if no bugs present themselves)* for 3.6
+- Also start ci_latest running 3.11
+
 ### 2021.5.28
 
 Codename: **Memorial Day 🇺**
