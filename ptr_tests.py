@@ -75,14 +75,14 @@ class TestPtr(unittest.TestCase):
     maxDiff = 2000
 
     def setUp(self) -> None:
-        if ptr.PY_37_OR_GREATER:
+        if ptr.PY_38_OR_GREATER:
             self.loop = asyncio.new_event_loop()
         else:
             self.loop = asyncio.get_event_loop()
         return super().setUp()
 
     def tearDown(self) -> None:
-        if ptr.PY_37_OR_GREATER:
+        if ptr.PY_38_OR_GREATER:
             self.loop.close()
         return super().tearDown()
 

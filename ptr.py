@@ -27,8 +27,10 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 LOG = logging.getLogger(__name__)
 MACOSX = system() == "Darwin"
-# To make unittests do different things for newer and older runtimes
-PY_37_OR_GREATER = sys.version_info >= (3, 7)
+# To make main use asyncio.run and unittests to test approrpiately for older cpython
+# Using 3.8 rather than 3.7 due to subprocess.exec in < 3.8 only support main loop
+# https://bugs.python.org/issue35621
+PY_38_OR_GREATER = sys.version_info >= (3, 8)
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
 # Need to use sys.platform for mypy to understand
@@ -1144,7 +1146,7 @@ def main() -> None:
         args.error_on_warnings,
         args.system_site_packages,
     )
-    if PY_37_OR_GREATER:
+    if PY_38_OR_GREATER:
         sys.exit(asyncio.run(main_coro))
     else:
         loop = asyncio.get_event_loop()
