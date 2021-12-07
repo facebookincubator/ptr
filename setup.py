@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright © Meta Platforms, Inc
+# Copyright © Meta Platforms, Inc and affiliates
 # coding=utf8
 # pyre-ignore-all-errors
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright © Meta Platforms, Inc
+# Copyright © Meta Platforms, Inc and affiliates
 
 # Simple script to build and release via twine to PyPI
 
