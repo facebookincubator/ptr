@@ -27,6 +27,9 @@ from unittest.mock import Mock, patch
 import ptr
 import ptr_tests_fixtures
 
+# Set a global for our file encoding - pylint recommendation
+FILE_ENCODING = "utf8"
+
 # Turn off logging for unit tests - Comment out to enable
 ptr.LOG = Mock()
 # Hacky global for a monkey patch of asyncio.qsize()
@@ -269,7 +272,7 @@ class TestPtr(unittest.TestCase):
             build_path = td_path / "build-arm"
             cooper_path = td_path / "cooper"
 
-            touch_files(*(adir / "setup.py" for adir in {build_path, cooper_path}))
+            touch_files(*(adir / "setup.py" for adir in (build_path, cooper_path)))
 
             setup_pys = ptr.find_setup_pys(td_path, {"build*"})
             self.assertEqual(len(setup_pys), 1)
@@ -427,7 +430,7 @@ class TestPtr(unittest.TestCase):
         setup_cfg = tmp_dir / "setup.cfg"
         setup_py = tmp_dir / "setup.py"
 
-        with setup_cfg.open("w") as scp:
+        with setup_cfg.open("w", encoding=FILE_ENCODING) as scp:
             scp.write(ptr_tests_fixtures.SAMPLE_SETUP_CFG)
 
         self.assertEqual(
@@ -478,7 +481,7 @@ class TestPtr(unittest.TestCase):
             fake_venv_path = Path(td)
             pip_conf_path = fake_venv_path / "pip.conf"
             ptr._set_pip_mirror(fake_venv_path)
-            with pip_conf_path.open("r") as pcfp:
+            with pip_conf_path.open("r", encoding=FILE_ENCODING) as pcfp:
                 conf_file = pcfp.read()
             self.assertTrue("[global]" in conf_file)
             self.assertTrue("/simple" in conf_file)
@@ -489,7 +492,7 @@ class TestPtr(unittest.TestCase):
         with TemporaryDirectory() as td:
             td_path = Path(td)
             setup_py_path = td_path / "setup.py"
-            with setup_py_path.open("w") as spfp:
+            with setup_py_path.open("w", encoding=FILE_ENCODING) as spfp:
                 print(ptr_tests_fixtures.SAMPLE_SETUP_PY, file=spfp)
 
             queue.put_nowait(setup_py_path)
@@ -534,7 +537,7 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 7) if no_pyre else (None, 8),
+                (None, 8) if no_pyre else (None, 9),
             )
 
             # Test we run coverage when required_coverage does not exist
@@ -547,7 +550,7 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 7) if no_pyre else (None, 8),
+                (None, 8) if no_pyre else (None, 9),
             )
 
             # Run everything but black + no print cov
@@ -558,11 +561,11 @@ class TestPtr(unittest.TestCase):
             self.assertEqual(
                 # pyre-ignore[6]: Tests ...
                 self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
-                (None, 6) if no_pyre else (None, 7),
+                (None, 7) if no_pyre else (None, 8),
             )
 
             # Run everything but test_suite with print_cov
-            expected_no_pyre_tests = (None, 6) if no_pyre else (None, 7)
+            expected_no_pyre_tests = (None, 7) if no_pyre else (None, 8)
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
             del etp["test_suite"]
             del etp["required_coverage"]

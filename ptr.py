@@ -211,8 +211,8 @@ def _analyze_coverage(
             cover = coverage_lines[afile].cover
         except KeyError:
             err = (
-                "{} has not reported any coverage. Does the file exist? "
-                "Does it get ran during tests? Remove from setup config.".format(afile)
+                f"{afile} has not reported any coverage. Does the file exist? "
+                + "Does it get ran during tests? Remove from setup config."
             )
             keyerror_runtime = int(time() - test_run_start_time)
             return test_result(
@@ -225,12 +225,8 @@ def _analyze_coverage(
 
         if cover < cov_req:
             failed_coverage = True
-            failed_output += "  {}: {} < {} - Missing: {}\n".format(
-                afile,
-                coverage_lines[afile].cover,
-                cov_req,
-                coverage_lines[afile].missing,
-            )
+            cov_lines = coverage_lines[afile]
+            failed_output += f"  {afile}: {cov_lines.cover} < {cov_req} - Missing: {cov_lines.missing}\n"
 
     if failed_coverage:
         failed_cov_runtime = int(time() - test_run_start_time)
@@ -482,11 +478,8 @@ async def _progress_reporter(
 ) -> None:
     while queue.qsize() > 0:
         done_count = total_tests - queue.qsize()
-        LOG.info(
-            "{} / {} test suites ran ({}%)".format(
-                done_count, total_tests, int((done_count / total_tests) * 100)
-            )
-        )
+        done_pct = int((done_count / total_tests) * 100)
+        LOG.info(f"{done_count} / {total_tests} test suites ran ({done_pct}%)")
         await asyncio.sleep(progress_interval)
 
     LOG.debug("progress_reporter finished")
@@ -522,9 +515,7 @@ def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
                 build_environ[var_name] = str(value)
     else:
         LOG.error(
-            "{} does not exist. Not add int PATH + INCLUDE Env variables".format(
-                build_base_path
-            )
+            f"{build_base_path} does not exist. Not add int PATH + INCLUDE Env variables"
         )
 
     return build_environ
@@ -730,7 +721,7 @@ async def _test_runner(
         try:
             setup_py_path = queue.get_nowait()
         except asyncio.QueueEmpty:
-            LOG.debug("test_runner {} exiting".format(idx))
+            LOG.debug(f"test_runner {idx} exiting")
             return
 
         test_run_start_time = int(time())
@@ -893,8 +884,9 @@ def print_test_results(
                 stats["total.timeouts"] += 1
             else:
                 stats["total.fails"] += 1
-            fail_output += "{} (failed '{}' step):\n{}\n".format(
-                result.setup_py_path, StepName(result.returncode).name, result.output
+            fail_output += (
+                f"{result.setup_py_path} (failed '{StepName(result.returncode).name}' "
+                + f"step):\n{result.output}\n"
             )
         else:
             stats["total.passes"] += 1
@@ -903,25 +895,19 @@ def print_test_results(
     print(f"-- Summary (total time {total_time}s):\n")
     # TODO: Hardcode some workaround to ensure Windows always prints UTF8
     # https://github.com/facebookincubator/ptr/issues/34
-    print(
-        "✅ PASS: {}\n❌ FAIL: {}\n️⌛ TIMEOUT: {}\n🔒 DISABLED: {}\n💩 TOTAL: {}\n".format(
-            stats["total.passes"],
-            stats["total.fails"],
-            stats["total.timeouts"],
-            stats["total.disabled"],
-            stats["total.test_suites"],
-        )
-    )
+    print(f"✅ PASS: {stats['total.passes']}")
+    print(f"❌ FAIL: {stats['total.fails']}")
+    print(f"⌛ TIMEOUT: {stats['total.timeouts']}")
+    print(f"🔒 DISABLED: {stats['total.disabled']}")
+    print(f"💩 TOTAL: {stats['total.test_suites']}\n")
     if "total.setup_pys" in stats:
         stats["pct.setup_py_ptr_enabled"] = int(
             (stats["total.test_suites"] / stats["total.setup_pys"]) * 100
         )
         print(
-            "-- {} / {} ({}%) `setup.py`'s have `ptr` tests running\n".format(
-                stats["total.test_suites"],
-                stats["total.setup_pys"],
-                stats["pct.setup_py_ptr_enabled"],
-            )
+            f"-- {stats['total.test_suites']} / {stats['total.setup_pys']} "
+            + f"({stats['pct.setup_py_ptr_enabled']}%) `setup.py`'s have "
+            + "`ptr` tests running\n"
         )
     if fail_output:
         print("-- Failure Output --\n")
@@ -1087,8 +1073,8 @@ def main() -> None:
         "-m",
         "--mirror",
         default=CONFIG["ptr"]["pypi_url"],
-        help="URL for pip to use for Simple API [Default: {}]".format(
-            CONFIG["ptr"]["pypi_url"]
+        help=(
+            f"URL for pip to use for Simple API [Default: {CONFIG['ptr']['pypi_url']}]"
         ),
     )
     parser.add_argument(
