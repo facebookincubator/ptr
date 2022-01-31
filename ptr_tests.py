@@ -27,6 +27,9 @@ from unittest.mock import Mock, patch
 import ptr
 import ptr_tests_fixtures
 
+# Set a global for our file encoding - pylint recommendation
+FILE_ENCODING = "utf8"
+
 # Turn off logging for unit tests - Comment out to enable
 ptr.LOG = Mock()
 # Hacky global for a monkey patch of asyncio.qsize()
@@ -427,7 +430,7 @@ class TestPtr(unittest.TestCase):
         setup_cfg = tmp_dir / "setup.cfg"
         setup_py = tmp_dir / "setup.py"
 
-        with setup_cfg.open("w") as scp:
+        with setup_cfg.open("w", encoding=FILE_ENCODING) as scp:
             scp.write(ptr_tests_fixtures.SAMPLE_SETUP_CFG)
 
         self.assertEqual(
@@ -478,7 +481,7 @@ class TestPtr(unittest.TestCase):
             fake_venv_path = Path(td)
             pip_conf_path = fake_venv_path / "pip.conf"
             ptr._set_pip_mirror(fake_venv_path)
-            with pip_conf_path.open("r") as pcfp:
+            with pip_conf_path.open("r", encoding=FILE_ENCODING) as pcfp:
                 conf_file = pcfp.read()
             self.assertTrue("[global]" in conf_file)
             self.assertTrue("/simple" in conf_file)
@@ -489,7 +492,7 @@ class TestPtr(unittest.TestCase):
         with TemporaryDirectory() as td:
             td_path = Path(td)
             setup_py_path = td_path / "setup.py"
-            with setup_py_path.open("w") as spfp:
+            with setup_py_path.open("w", encoding=FILE_ENCODING) as spfp:
                 print(ptr_tests_fixtures.SAMPLE_SETUP_PY, file=spfp)
 
             queue.put_nowait(setup_py_path)
