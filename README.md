@@ -9,7 +9,7 @@ Python Test Runner (ptr) was born to run tests in an opinionated way, within arb
 `ptr` supports many Python projects with unit tests defined in their `setup.(cfg|py)` files per repository.
 `ptr` allows developers to test multiple projects/modules in one Python environment through the use of a single test virtual environment.
 
-- `ptr` requires `>=` **python 3.6**
+- `ptr` requires `>=` **python 3.7**
 - `ptr` itself uses `ptr` to run its tests 👌🏼
 - `ptr` is supported and tested on *Linux*, *MacOS* + *Windows* Operating Systems
 
