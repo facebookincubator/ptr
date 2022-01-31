@@ -31,7 +31,7 @@ ptr_params = {
     # Run flake8 or not
     "run_flake8": True,
     # Run pylint or not - Disabled until 3.9 Support
-    "run_pylint": False,
+    "run_pylint": True,
     # Run pyre or not
     "run_pyre": True,
 }
