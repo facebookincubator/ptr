@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright © Meta Platforms, Inc and affiliates
+# Copyright © Meta Platforms, Inc. and affiliates
 
 set -e
 
