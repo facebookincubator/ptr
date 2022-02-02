@@ -2,6 +2,21 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2022.2.2
+
+Codename: **Richie 2 for 22 🏏**
+
+*Release named in honoUr of the Late Great [Richie Benaud](https://en.wikipedia.org/wiki/Richie_Benaud)*
+
+- This will be the last 3.7 supported version
+  - Why? Want a less buggy `asyncio.run` for starting asyncio
+- Reactivate `pylint` in CI 
+  - f-string all ptr strings
+- Drop python 3.6 CI + support
+- We're Meta now - Update copyrights due to comapny change name
+
+3.11 CI is failing due to depedencies. Will watch and fix asap.
+
 ### 2021.11.23
 
 Codename: **A 🅰️**
