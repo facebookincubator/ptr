@@ -13,6 +13,7 @@ from tempfile import gettempdir
 from unittest.mock import MagicMock, patch
 
 import ptr
+
 # pyre-fixme[21]: Import not found
 from hypothesis import given, strategies as st
 
