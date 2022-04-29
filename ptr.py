@@ -923,11 +923,7 @@ def print_test_results(
     print(f"⌛ TIMEOUT: {stats.get('total.timeouts', 0)}")
     print(f"🔒 DISABLED: {stats.get('total.disabled', 0)}")
     print(f"💩 TOTAL: {stats.get('total.test_suites', 0)}\n")
-    if (
-        "total.setup_pys" in stats
-        and "total.setup_pys" in stats
-        and stats["total.setup_pys"] > 0
-    ):
+    if "total.setup_pys" in stats and stats["total.setup_pys"] > 0:
         stats["pct.setup_py_ptr_enabled"] = int(
             stats.get("total.test_suites", 0) / stats["total.setup_pys"] * 100
         )
