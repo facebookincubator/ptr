@@ -28,7 +28,7 @@ jobs:
     - name: Run Unitests via coverage
       run: |
         python -m pip install coverage
-        coverage run ptr_tests.py
+        coverage run ptr_tests.py -v
 
     - name: Show coverage
       run: |

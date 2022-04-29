@@ -21,7 +21,7 @@ ptr_params = {
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
     # Relative path from setup.py to module (e.g. ptr == ptr.py)
-    "required_coverage": {"ptr.py": 85.0, "TOTAL": 89},
+    "required_coverage": {"ptr.py": 84.0, "TOTAL": 88},
     # Run usort or not
     "run_usort": True,
     # Run black or not

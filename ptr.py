@@ -13,7 +13,7 @@ import ast
 import asyncio
 import logging
 import sys
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from configparser import ConfigParser
 from enum import Enum
 from json import dump
@@ -25,7 +25,7 @@ from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import gettempdir
 from time import time
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 
 LOG = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ def _config_read(
     if cp is None:
         cp = _config_default()
 
-    cwd_path = Path(cwd)  # type: Path
+    cwd_path = Path(cwd)
     root_path = Path(f"{cwd_path.drive}\\") if WINDOWS else Path("/")
 
     while cwd_path:
@@ -106,13 +106,27 @@ class StepName(Enum):
     pyre_run = 9
 
 
-coverage_line = namedtuple("coverage_line", ["stmts", "miss", "cover", "missing"])
-step = namedtuple(
-    "step", ["step_name", "run_condition", "cmds", "log_message", "timeout"]
-)
-test_result = namedtuple(
-    "test_result", ["setup_py_path", "returncode", "output", "runtime", "timeout"]
-)
+class coverage_line(NamedTuple):
+    stmts: float
+    miss: float
+    cover: float
+    missing: str
+
+
+class step(NamedTuple):
+    step_name: StepName
+    run_condition: bool
+    cmds: Tuple[str, ...]
+    log_message: str
+    timeout: float
+
+
+class test_result(NamedTuple):
+    setup_py_path: Path
+    returncode: int
+    output: str
+    runtime: float
+    timeout: bool
 
 
 def _get_site_packages_path(venv_path: Path) -> Optional[Path]:
@@ -195,13 +209,13 @@ def _analyze_coverage(
             )
 
         if sl[0] != "TOTAL":
-            stats[
-                f"suite.{module_path.name}_coverage.file.{module_path_str}"
-            ] = coverage_lines[module_path_str].cover
+            stats[f"suite.{module_path.name}_coverage.file.{module_path_str}"] = int(
+                coverage_lines[module_path_str].cover
+            )
         else:
-            stats[f"suite.{module_path.name}_coverage.total"] = coverage_lines[
-                module_path_str
-            ].cover
+            stats[f"suite.{module_path.name}_coverage.total"] = int(
+                coverage_lines[module_path_str].cover
+            )
 
     failed_output = "The following files did not meet coverage requirements:\n"
     failed_coverage = False
@@ -330,7 +344,7 @@ def _generate_pylint_cmd(
     if not config.get("run_pylint", False):
         return ()
 
-    py_files = set()  # type: Set[str]
+    py_files: Set[str] = set()
     find_py_files(py_files, module_dir)
 
     cmds = [str(pylint_exe)]
@@ -355,7 +369,7 @@ def _generate_usort_cmd(
     if not config.get("run_usort", False):
         return ()
 
-    py_files = set()  # type: Set[str]
+    py_files: Set[str] = set()
     find_py_files(py_files, module_dir)
 
     return (str(usort_exe), "check", *sorted(py_files))
@@ -394,8 +408,8 @@ def _get_test_modules(
     )
     stats["total.setup_pys"] = len(all_setup_pys)
 
-    non_configured_modules = []  # type: List[Path]
-    test_modules = {}  # type: Dict[Path, Dict]
+    non_configured_modules: List[Path] = []
+    test_modules: Dict[Path, Dict] = {}
     for setup_py in all_setup_pys:
         disabled_err_msg = f"Not running {setup_py} as ptr is disabled via config"
         # If a setup.cfg exists lets prefer it, if there is a [ptr] section
@@ -524,6 +538,10 @@ def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
 def _set_pip_mirror(
     venv_path: Path, mirror: str = CONFIG["ptr"]["pypi_url"], timeout: int = 2
 ) -> None:
+    if not venv_path.exists():
+        LOG.error(f"{venv_path} does not exist - So NOT writing out a pip.conf")
+        return
+
     pip_conf_path = venv_path / "pip.conf"
     with pip_conf_path.open("w", encoding="utf8") as pcfp:
         print(PIP_CONF_TEMPLATE.format(mirror, timeout), file=pcfp)
@@ -805,6 +823,9 @@ def find_py_files(py_files: Set[str], base_dir: Path) -> None:
 def _recursive_find_files(
     files: Set[Path], base_dir: Path, exclude_patterns: Set[str], follow_symlinks: bool
 ) -> None:
+    if not base_dir.exists():
+        return
+
     dirs = [d for d in base_dir.iterdir() if d.is_dir()]
     files.update(
         {x for x in base_dir.iterdir() if x.is_file() and x.name == "setup.py"}
@@ -815,6 +836,9 @@ def _recursive_find_files(
 
         skip_dir = False
         for exclude_pattern in exclude_patterns:
+            if not exclude_pattern or exclude_pattern == ".":
+                LOG.error(f"Got a bad/empty exclude pattern: {exclude_pattern}")
+                continue
             if directory.match(exclude_pattern):
                 skip_dir = True
                 LOG.debug(
@@ -827,20 +851,19 @@ def _recursive_find_files(
 def find_setup_pys(
     base_path: Path, exclude_patterns: Set[str], follow_symlinks: bool = False
 ) -> Set[Path]:
-    setup_pys = set()  # type: Set[Path]
+    setup_pys: Set[Path] = set()
     _recursive_find_files(setup_pys, base_path, exclude_patterns, follow_symlinks)
     return setup_pys
 
 
 def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
     req_cov_key_strip = "required_coverage_"
-    ptr_params = {}  # type: Dict[str, Any]
+    ptr_params: Dict[str, Any] = {}
     setup_cfg = setup_py.parent / "setup.cfg"
     if not setup_cfg.exists():
         return ptr_params
 
     cp = ConfigParser()
-    # Have configparser maintain key case - T484 error = callable
     cp.optionxform = str  # type: ignore
     cp.read(setup_cfg)
     if "ptr" not in cp:
@@ -875,7 +898,15 @@ def print_test_results(
     if not stats:
         stats = defaultdict(int)
 
+    # Ensure we always have 0 counters in stats JSON output
+    # Thus must have been working due to defaultdict + printing the keys
+    # Let us be more explicit
+    stats["total.fails"] = 0
+    stats["total.passes"] = 0
     stats["total.test_suites"] = len(test_results)
+    stats["total.timeouts"] = 0
+    if "total.disabled" not in stats:
+        stats["total.disabled"] = 0
 
     fail_output = ""
     for result in sorted(test_results):
@@ -895,14 +926,14 @@ def print_test_results(
     print(f"-- Summary (total time {total_time}s):\n")
     # TODO: Hardcode some workaround to ensure Windows always prints UTF8
     # https://github.com/facebookincubator/ptr/issues/34
-    print(f"✅ PASS: {stats['total.passes']}")
-    print(f"❌ FAIL: {stats['total.fails']}")
-    print(f"⌛ TIMEOUT: {stats['total.timeouts']}")
-    print(f"🔒 DISABLED: {stats['total.disabled']}")
-    print(f"💩 TOTAL: {stats['total.test_suites']}\n")
-    if "total.setup_pys" in stats:
+    print(f"✅ PASS: {stats.get('total.passes', 0)}")
+    print(f"❌ FAIL: {stats.get('total.fails', 0)}")
+    print(f"⌛ TIMEOUT: {stats.get('total.timeouts', 0)}")
+    print(f"🔒 DISABLED: {stats.get('total.disabled', 0)}")
+    print(f"💩 TOTAL: {stats.get('total.test_suites', 0)}\n")
+    if "total.setup_pys" in stats and stats["total.setup_pys"] > 0:
         stats["pct.setup_py_ptr_enabled"] = int(
-            (stats["total.test_suites"] / stats["total.setup_pys"]) * 100
+            stats["total.test_suites"] / stats["total.setup_pys"] * 100
         )
         print(
             f"-- {stats['total.test_suites']} / {stats['total.setup_pys']} "
@@ -953,7 +984,7 @@ async def run_tests(
     for test_setup_py in sorted(tests_to_run.keys()):
         await queue.put(test_setup_py)
 
-    test_results = []  # type: List[test_result]
+    test_results: List[test_result] = []
     consumers = [
         _test_runner(
             queue,
@@ -974,6 +1005,9 @@ async def run_tests(
         )
 
     LOG.debug("Starting to run tests")
+    if not consumers:
+        LOG.error("Got no _test_runner coros to gather. Exiting run_tests.")
+        return 254
     await asyncio.gather(*consumers)
 
     stats["runtime.all_tests"] = int(time() - tests_start_time)
@@ -986,7 +1020,7 @@ async def run_tests(
     else:
         LOG.info(f"Not removing venv @ {venv_path} due to CLI arguments")
 
-    return stats["total.fails"] + stats["total.timeouts"]
+    return stats.get("total.fails", 0) + stats.get("total.timeouts", 0)
 
 
 async def async_main(
@@ -1004,7 +1038,7 @@ async def async_main(
     error_on_warnings: bool,
     system_site_packages: bool,
 ) -> int:
-    stats = defaultdict(int)  # type: Dict[str, int]
+    stats: Dict[str, int] = defaultdict(int)
     tests_to_run = _get_test_modules(
         base_path, stats, run_disabled, print_non_configured
     )
@@ -1018,7 +1052,7 @@ async def async_main(
         return 0
 
     try:
-        venv_path = Path(venv)  # type: Optional[Path]
+        venv_path: Optional[Path] = Path(venv)
         if venv_path and not venv_path.exists():
             LOG.error(f"{venv_path} venv does not exist. Please correct!")
             return 2
@@ -1148,5 +1182,5 @@ def main() -> None:
             loop.close()
 
 
-if __name__ == "__main__":
-    main()  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
+    main()

@@ -1,6 +1,7 @@
 black
 coverage>=5.0.1
 flake8
+hypothosis
 mypy
 pip
 pylint

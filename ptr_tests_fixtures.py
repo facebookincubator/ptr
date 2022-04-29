@@ -30,7 +30,7 @@ EXPECTED_TEST_PARAMS = {
     "entry_point_module": "ptr",
     "test_suite": "ptr_tests",
     "test_suite_timeout": 120,
-    "required_coverage": {"ptr.py": 85, "TOTAL": 89},
+    "required_coverage": {"ptr.py": 84, "TOTAL": 88},
     "run_usort": True,
     "run_black": True,
     "run_mypy": True,
@@ -218,8 +218,8 @@ disabled = true
 entry_point_module = ptr
 test_suite = ptr_tests
 test_suite_timeout = 120
-required_coverage_ptr.py = 85
-required_coverage_TOTAL = 89
+required_coverage_ptr.py = 84
+required_coverage_TOTAL = 88
 run_usort = true
 run_black = true
 run_mypy = true
