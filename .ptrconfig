@@ -1,0 +1,12 @@
+[ptr]
+venv_pkgs =
+  black
+  coverage
+  flake8
+  hypothesis
+  mypy
+  pip
+  pylint
+  pyre-check
+  setuptools
+  usort
