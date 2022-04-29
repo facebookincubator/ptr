@@ -898,7 +898,15 @@ def print_test_results(
     if not stats:
         stats = defaultdict(int)
 
+    # Ensure we always have 0 counters in stats JSON output
+    # Thus must have been working due to defaultdict + printing the keys
+    # Let us be more explicit
+    stats["total.fails"] = 0
+    stats["total.passes"] = 0
     stats["total.test_suites"] = len(test_results)
+    stats["total.timeouts"] = 0
+    if "total.disabled" not in stats:
+        stats["total.disabled"] = 0
 
     fail_output = ""
     for result in sorted(test_results):
@@ -925,10 +933,10 @@ def print_test_results(
     print(f"💩 TOTAL: {stats.get('total.test_suites', 0)}\n")
     if "total.setup_pys" in stats and stats["total.setup_pys"] > 0:
         stats["pct.setup_py_ptr_enabled"] = int(
-            stats.get("total.test_suites", 0) / stats["total.setup_pys"] * 100
+            stats["total.test_suites"] / stats["total.setup_pys"] * 100
         )
         print(
-            f"-- {stats.get('total.test_suites', 0)} / {stats['total.setup_pys']} "
+            f"-- {stats['total.test_suites']} / {stats['total.setup_pys']} "
             + f"({stats['pct.setup_py_ptr_enabled']}%) `setup.py`'s have "
             + "`ptr` tests running\n"
         )
