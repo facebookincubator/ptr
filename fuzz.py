@@ -7,11 +7,13 @@
 import asyncio
 import typing
 import unittest
+from collections import defaultdict
 from pathlib import Path
 from tempfile import gettempdir
 from unittest.mock import MagicMock, patch
 
 import ptr
+# pyre-fixme[21]: Import not found
 from hypothesis import given, strategies as st
 
 
@@ -167,7 +169,9 @@ class TestPtrRunners(unittest.TestCase):
         venv_path=st.one_of(st.none(), st.builds(Path)),
         venv_keep=st.booleans(),
         print_cov=st.booleans(),
-        stats=st.dictionaries(keys=st.text(), values=st.integers()),
+        stats=st.dictionaries(keys=st.text(), values=st.integers(min_value=0)).map(
+            lambda x: defaultdict(int, x)
+        ),
         stats_file=st.text(),
         venv_timeout=st.floats(),
         error_on_warnings=st.booleans(),
@@ -190,12 +194,9 @@ class TestPtrRunners(unittest.TestCase):
     ):
         created_venv_path = Path(gettempdir()) / "ptr_venv"
         test_results = (0, 69)
-        # TODO: Replace with defaultdict(int)
-        stats["total.passes"] = 0
         with patch("builtins.print"), patch(
             "ptr._test_steps_runner", return_value=test_results
         ), patch("ptr.chdir"), patch(
-            # "ptr._test_steps_runner"), patch("ptr.chdir"), patch(
             "ptr.create_venv",
             return_value=created_venv_path,
         ), patch(

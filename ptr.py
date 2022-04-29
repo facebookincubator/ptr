@@ -923,12 +923,16 @@ def print_test_results(
     print(f"⌛ TIMEOUT: {stats.get('total.timeouts', 0)}")
     print(f"🔒 DISABLED: {stats.get('total.disabled', 0)}")
     print(f"💩 TOTAL: {stats.get('total.test_suites', 0)}\n")
-    if "total.setup_pys" in stats:
+    if (
+        "total.setup_pys" in stats
+        and "total.setup_pys" in stats
+        and stats["total.setup_pys"] > 0
+    ):
         stats["pct.setup_py_ptr_enabled"] = int(
-            (stats["total.test_suites"] / stats["total.setup_pys"]) * 100
+            stats.get("total.test_suites", 0) / stats["total.setup_pys"] * 100
         )
         print(
-            f"-- {stats['total.test_suites']} / {stats['total.setup_pys']} "
+            f"-- {stats.get('total.test_suites', 0)} / {stats['total.setup_pys']} "
             + f"({stats['pct.setup_py_ptr_enabled']}%) `setup.py`'s have "
             + "`ptr` tests running\n"
         )
@@ -1012,8 +1016,6 @@ async def run_tests(
     else:
         LOG.info(f"Not removing venv @ {venv_path} due to CLI arguments")
 
-    # TODO: Might be able to return back to non get if we can get hypothesis to pass
-    # defaultdict(int) instead of hacking in keys ...
     return stats.get("total.fails", 0) + stats.get("total.timeouts", 0)
 
 
