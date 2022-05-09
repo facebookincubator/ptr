@@ -867,7 +867,7 @@ def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
     cp.optionxform = str  # type: ignore
     cp.read(setup_cfg)
     if "ptr" not in cp:
-        LOG.info(f"{} does not have a ptr section")
+        LOG.info(f"{setup_cfg} does not have a ptr section")
         return ptr_params
 
     # Create a setup.py like ptr_params to return
