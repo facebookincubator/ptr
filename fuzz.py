@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright © Meta Platforms, Inc. and affiliates
 
 # This test code was written by the `hypothesis.extra.ghostwriter` module
 # and is provided under the Creative Commons Zero public domain dedication.
