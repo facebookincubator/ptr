@@ -374,10 +374,17 @@ class TestPtr(unittest.TestCase):
             lib_path.mkdir()
             self.assertIsNone(ptr._get_site_packages_path(lib_path.parent))
 
+    # Patch parsing except setup.py to keep coverage up
+    @patch("ptr.parse_setup_cfg")
+    @patch("ptr.parse_pyproject_toml")
     @patch("ptr.print")  # noqa
-    def test_get_test_modules(self, mock_print: Mock) -> None:
+    def test_get_test_modules(
+        self, mock_print: Mock, mock_pyproject: Mock, mock_setup_cfg: Mock
+    ) -> None:
+        mock_pyproject.return_value = {}
+        mock_setup_cfg.return_value = {}
         base_path = Path(__file__).parent
-        stats = defaultdict(int)  # type: Dict[str, int]
+        stats: Dict[str, int] = defaultdict(int)
         test_modules = ptr._get_test_modules(base_path, stats, True, True)
         self.assertEqual(
             test_modules[base_path / "setup.py"],
@@ -424,6 +431,23 @@ class TestPtr(unittest.TestCase):
         else:
             with self.assertRaises(SystemExit):
                 ptr.main()
+
+    def test_parse_pyproject_toml(self) -> None:
+        tmp_dir = Path(gettempdir())
+        pyproject_toml = tmp_dir / ptr.PYPROJECT_TOML
+        setup_py = tmp_dir / "setup.py"
+
+        with pyproject_toml.open("w", encoding=FILE_ENCODING) as pcp:
+            pcp.write(ptr_tests_fixtures.SAMPLE_PYPROJECT)
+
+        # No pyproject.toml file exists
+        self.assertEqual(ptr.parse_pyproject_toml(setup_py.parent), {})
+        # No ptr section
+        self.assertEqual(ptr.parse_pyproject_toml(setup_py, "not_a_tool"), {})
+        # Everything works
+        self.assertEqual(
+            ptr.parse_pyproject_toml(setup_py), ptr_tests_fixtures.EXPECTED_TEST_PARAMS
+        )
 
     def test_parse_setup_cfg(self) -> None:
         tmp_dir = Path(gettempdir())

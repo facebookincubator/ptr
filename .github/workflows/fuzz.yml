@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          python -m pip install coverage hypothesis
+          python -m pip install . coverage hypothesis
 
       - name: Run fuzz tests
         run: |
