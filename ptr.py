@@ -27,6 +27,18 @@ from tempfile import gettempdir
 from time import time
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
+# Support pyproject.toml
+# In >= 3.11 we can remove this import dance
+if sys.version_info >= (3, 11):  # pragma: no cover
+    try:
+        import tomllib
+    except ImportError:
+        # Help users on older alphas
+        import tomli as tomllib
+else:
+    # pyre-ignore: Undefined import [21]
+    import tomli as tomllib
+
 
 LOG = logging.getLogger(__name__)
 MACOSX = system() == "Darwin"
@@ -34,6 +46,7 @@ MACOSX = system() == "Darwin"
 # Using 3.8 rather than 3.7 due to subprocess.exec in < 3.8 only support main loop
 # https://bugs.python.org/issue35621
 PY_38_OR_GREATER = sys.version_info >= (3, 8)
+PYPROJECT_TOML = "pyproject.toml"
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
 # Need to use sys.platform for mypy to understand
@@ -412,8 +425,11 @@ def _get_test_modules(
     test_modules: Dict[Path, Dict] = {}
     for setup_py in all_setup_pys:
         disabled_err_msg = f"Not running {setup_py} as ptr is disabled via config"
-        # If a setup.cfg exists lets prefer it, if there is a [ptr] section
-        ptr_params = parse_setup_cfg(setup_py)
+        # If a pyproject.toml or setup.cfg exists lets prefer them
+        # Only if there is a [ptr] section
+        ptr_params = parse_pyproject_toml(setup_py)
+        if not ptr_params:
+            ptr_params = parse_setup_cfg(setup_py)
         if not ptr_params:
             ptr_params = _parse_setup_params(setup_py)
 
@@ -854,6 +870,25 @@ def find_setup_pys(
     setup_pys: Set[Path] = set()
     _recursive_find_files(setup_pys, base_path, exclude_patterns, follow_symlinks)
     return setup_pys
+
+
+def parse_pyproject_toml(
+    setup_py: Path, tool_section: str = "tool", ptr_section: str = "ptr"
+) -> Dict[str, Any]:
+    ptr_params: Dict[str, Any] = {}
+    pyproject_toml_path = setup_py.parent / PYPROJECT_TOML
+    if not pyproject_toml_path.exists():
+        return ptr_params
+
+    with pyproject_toml_path.open("rb") as f:
+        pyproject_toml = tomllib.load(f)
+    ptr_params = pyproject_toml.get(tool_section, {}).get(ptr_section, {})
+
+    if not ptr_params:
+        LOG.info(f"{pyproject_toml} does not have a tool.ptr section")
+        return ptr_params
+
+    return ptr_params
 
 
 def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:

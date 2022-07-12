@@ -13,7 +13,9 @@ Python Test Runner (ptr) was born to run tests in an opinionated way, within arb
 - `ptr` itself uses `ptr` to run its tests 👌🏼
 - `ptr` is supported and tested on *Linux*, *MacOS* + *Windows* Operating Systems
 
-By adding `ptr` configuration to your `setup.cfg` or `setup.py` you can have `ptr` perform the following, per test suite, in parallel:
+By adding `ptr` configuration to your either of your `pyproject.toml`, `setup.cfg` or `setup.py` you can have `ptr` perform the following,
+per test suite, in parallel:
+
 - run your test suite
 - check and enforce coverage requirements (via [coverage](https://pypi.org/project/coverage/)),
 - format code (via [black](https://pypi.org/project/black/))
@@ -36,7 +38,7 @@ ptr
 I'm glad you ask. Under the covers `ptr` performs:
 - Recursively searches for `setup.(cfg|py)` files from `BASE_DIR` (defaults to your "current working directory" (CWD))
    - [AST](https://docs.python.org/3/library/ast.html) parses out the config for each `setup.py` test requirements
-   - If a `setup.cfg` exists, load via configparser and prefer if a `[ptr]` section exists
+   - If a `pyproject.toml` or `setup.cfg` exists, load via configparser/tomli and prefer if a `[ptr]` section exists
 - Creates a [Python Virtual Environment](https://docs.python.org/3/tutorial/venv.html) (*OPTIONALLY* pointed at an internal PyPI mirror)
 - Runs `ATONCE` tests suites in parallel (i.e. per setup.(cfg|ptr))
 - All steps will be run for each suite and ONLY *FAILED* runs will have output written to stdout

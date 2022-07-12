@@ -211,6 +211,21 @@ setup(
 )
 """
 
+SAMPLE_PYPROJECT = """\
+[tool.ptr]
+disabled = true
+entry_point_module = "ptr"
+test_suite = "ptr_tests"
+test_suite_timeout = 120
+required_coverage = { 'ptr.py' = 84, TOTAL = 88 }
+run_usort = true
+run_black = true
+run_mypy = true
+run_flake8 = true
+run_pylint = true
+run_pyre = true
+"""
+
 # Disabled is set as we --run-disabled the run in CI
 SAMPLE_SETUP_CFG = """\
 [ptr]

@@ -70,7 +70,7 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     python_requires=">=3.7",
-    install_requires=None,
+    install_requires=["tomli>=1.1.0; python_full_version < '3.11.0a7'"],
     entry_points={"console_scripts": ["ptr = ptr:main"]},
     test_suite=ptr_params["test_suite"],
 )
