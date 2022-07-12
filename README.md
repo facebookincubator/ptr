@@ -131,11 +131,19 @@ ptr_params = {
 }
 ```
 
+### `pyproject.toml`
+
+This is per project in your repository and if exists is preferred over `setup.py` and `setup.cfg`.
+
+Please refer to [`pyproject.toml`](http://github.com/facebookincubator/ptr/blob/master/pyproject.toml)
+for the options available + format.
+
 ### `setup.cfg`
 
 This is per project in your repository and if exists is preferred over `setup.py`.
 
-Please refer to [`setup.cfg.sample`](http://github.com/facebookincubator/ptr/blob/master/setup.cfg.sample) for the options available + format.
+Please refer to [`setup.cfg.sample`](http://github.com/facebookincubator/ptr/blob/master/setup.cfg.sample)
+for the options available + format.
 
 ### mypy Specifics
 
