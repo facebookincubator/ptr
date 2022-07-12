@@ -68,6 +68,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     python_requires=">=3.7",
     install_requires=["tomli>=1.1.0; python_full_version < '3.11.0a7'"],
