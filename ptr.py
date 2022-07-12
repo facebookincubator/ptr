@@ -7,6 +7,7 @@
 # Can remove once we're >= 3.7 so asyncio has a .run() method
 # pyre-ignore-all-errors[0]
 # pyre-ignore-all-errors[16]
+# pyre-ignore-all-errors[21]
 
 import argparse
 import ast
@@ -36,8 +37,7 @@ if sys.version_info >= (3, 11):  # pragma: no cover
         # Help users on older alphas
         import tomli as tomllib
 else:
-    # pyre-ignore: Undefined import [21]
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore
 
 
 LOG = logging.getLogger(__name__)
