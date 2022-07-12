@@ -30,8 +30,8 @@ ptr_params = {
     "run_mypy": True,
     # Run flake8 or not
     "run_flake8": True,
-    # Run pylint or not - Disabled until 3.9 Support
-    "run_pylint": True,
+    # Run pylint or not - Disabled due to python3.11 support
+    "run_pylint": False,
     # Run pyre or not
     "run_pyre": True,
 }
@@ -68,6 +68,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     python_requires=">=3.7",
     install_requires=["tomli>=1.1.0; python_full_version < '3.11.0a7'"],

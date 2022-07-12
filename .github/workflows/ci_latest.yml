@@ -39,4 +39,5 @@ jobs:
          PTR_INTEGRATION: 1
          pythonioencoding: utf-8
         run: |
-          python ci.py || echo "!! FAILED: Please look into - returned $?"
+          python -m pip install -r requirements.txt
+          python ci.py

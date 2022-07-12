@@ -561,7 +561,7 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 8) if no_pyre else (None, 9),
+                (None, 7) if no_pyre else (None, 8),
             )
 
             # Test we run coverage when required_coverage does not exist
@@ -574,7 +574,7 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 8) if no_pyre else (None, 9),
+                (None, 7) if no_pyre else (None, 8),
             )
 
             # Run everything but black + no print cov
@@ -585,11 +585,11 @@ class TestPtr(unittest.TestCase):
             self.assertEqual(
                 # pyre-ignore[6]: Tests ...
                 self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
-                (None, 7) if no_pyre else (None, 8),
+                (None, 6) if no_pyre else (None, 7),
             )
 
             # Run everything but test_suite with print_cov
-            expected_no_pyre_tests = (None, 7) if no_pyre else (None, 8)
+            expected_no_pyre_tests = (None, 6) if no_pyre else (None, 7)
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
             del etp["test_suite"]
             del etp["required_coverage"]
