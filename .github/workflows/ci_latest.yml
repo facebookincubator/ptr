@@ -4,7 +4,7 @@ on: [push, pull_request]
  
 jobs:
   build:
-    name: bandersnatch CI python ${{ matrix.python-version }} on ${{matrix.os}}
+    name: ptr latest CI on python ${{ matrix.python-version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
