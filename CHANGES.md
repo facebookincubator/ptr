@@ -2,6 +2,20 @@
 
 Each release to PyPI I'm going to give a codename as to where I am or was in the world 🌏.
 
+### 2022.7.12
+
+Codename: **Seattle 🦑**
+
+*Release named in honoUr of my visit to Seattle last week ...*
+
+- 3.11 Supported - added metadata + made 3.11 CI pass - PR #121
+- Add `pyproject.toml` user config support - PR #120
+- Add basic Hypothesis fuzz testing - PR #118
+  - Learnt during US PyCon 2022
+- Add `pyproject.toml` basic PEP517 building support - PR #117
+- This *(again)* will be the last 3.7 supported version
+  - I forgot to remove + CI still passes so will leave for now :)
+
 ### 2022.2.2
 
 Codename: **Richie 2 for 22 🏏**
