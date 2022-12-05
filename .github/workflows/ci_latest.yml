@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.1.0
-      - uses: deadsnakes/action@v2.1.1
+      - uses: deadsnakes/action@v3.0.0
         with:
           python-version: ${{ matrix.python-version }}
           debug: true
