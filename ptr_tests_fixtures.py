@@ -5,13 +5,15 @@
 # LICENSE file in the root directory of this source tree.
 # coding=utf8
 # flake8: noqa
+# pylint: skip-file
+
+from __future__ import annotations
 
 from os import environ
 from os.path import sep
 from pathlib import Path
 from sys import version_info
 from tempfile import gettempdir
-from typing import Dict
 
 from ptr import test_result
 
@@ -35,7 +37,7 @@ EXPECTED_TEST_PARAMS = {
     "run_black": True,
     "run_mypy": True,
     "run_flake8": True,
-    "run_pylint": False,
+    "run_pylint": True,
     "run_pyre": True,
 }
 
@@ -96,7 +98,7 @@ EXPECTED_COVERAGE_RESULTS = [
 ]
 
 FAKE_REQ_COVERAGE = {str(Path("unittest/ptr.py")): 99.0, "TOTAL": 99}
-FAKE_TG_REQ_COVERAGE: Dict[str, float] = {str(Path("tg/tg.py")): 99, "TOTAL": 99}
+FAKE_TG_REQ_COVERAGE: dict[str, float] = {str(Path("tg/tg.py")): 99, "TOTAL": 99}
 
 
 SAMPLE_REPORT_OUTPUT = """\
@@ -222,7 +224,7 @@ run_usort = true
 run_black = true
 run_mypy = true
 run_flake8 = true
-run_pylint = false
+run_pylint = true
 run_pyre = true
 """
 
@@ -239,7 +241,7 @@ run_usort = true
 run_black = true
 run_mypy = true
 run_flake8 = true
-run_pylint = false
+run_pylint = true
 run_pyre = true
 """
 

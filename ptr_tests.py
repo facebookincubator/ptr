@@ -5,23 +5,19 @@
 # LICENSE file in the root directory of this source tree.
 # coding=utf8
 
+from __future__ import annotations
+
 import asyncio
 import unittest
 from collections import defaultdict
+from collections.abc import Sequence
 from copy import deepcopy
 from os import environ
 from pathlib import Path
 from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import gettempdir, TemporaryDirectory
-from typing import (  # noqa: F401  # pylint: disable=unused-import
-    Any,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Any
 from unittest.mock import Mock, patch
 
 import ptr
@@ -48,13 +44,11 @@ def fake_get_event_loop(*args: Any, **kwargs: Any) -> ptr_tests_fixtures.FakeEve
     return ptr_tests_fixtures.FakeEventLoop()
 
 
-async def fake_test_steps_runner(
-    *args: Any, **kwargs: Any
-) -> Tuple[Optional[ptr.test_result], int]:
+async def fake_test_steps_runner(*args: Any, **kwargs: Any) -> tuple[None, int]:
     return (None, TOTAL_REPORTER_TESTS)
 
 
-async def return_bytes_output(*args: Any, **kwargs: Any) -> Tuple[bytes, bytes]:
+async def return_bytes_output(*args: Any, **kwargs: Any) -> tuple[bytes, bytes]:
     return (b"Unitest stdout", b"Unittest stderr")
 
 
@@ -384,7 +378,7 @@ class TestPtr(unittest.TestCase):
         mock_pyproject.return_value = {}
         mock_setup_cfg.return_value = {}
         base_path = Path(__file__).parent
-        stats: Dict[str, int] = defaultdict(int)
+        stats: dict[str, int] = defaultdict(int)
         test_modules = ptr._get_test_modules(base_path, stats, True, True)
         self.assertEqual(
             test_modules[base_path / "setup.py"],
@@ -464,8 +458,7 @@ class TestPtr(unittest.TestCase):
     @patch("ptr.print")  # noqa
     def test_print_non_configured_modules(self, mock_print: Mock) -> None:
         modules = [Path("/tmp/foo/setup.py"), Path("/tmp/bla/setup.py")]
-        # TODO: Workout why pylint things this function does not exist
-        ptr.print_non_configured_modules(modules)  # pylint: disable=E1101
+        ptr.print_non_configured_modules(modules)
         self.assertEqual(3, mock_print.call_count)
 
     @patch("ptr.print")  # noqa
@@ -520,10 +513,10 @@ class TestPtr(unittest.TestCase):
                 print(ptr_tests_fixtures.SAMPLE_SETUP_PY, file=spfp)
 
             queue.put_nowait(setup_py_path)
-            tests_to_run = {}  # type: Dict[Path, Dict]
+            tests_to_run: dict[Path, dict] = {}
             tests_to_run[setup_py_path] = ptr_tests_fixtures.SAMPLE_SETUP_PY_PTR
-            test_results = []  # type: List[ptr.test_result]
-            stats = defaultdict(int)  # type: Dict[str, int]
+            test_results: list[ptr.test_result] = []
+            stats: dict[str, int] = defaultdict(int)
             self.loop.run_until_complete(
                 ptr._test_runner(
                     queue, tests_to_run, test_results, td_path, False, stats, True, 69
@@ -561,7 +554,7 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 7) if no_pyre else (None, 8),
+                (None, 8) if no_pyre else (None, 9),
             )
 
             # Test we run coverage when required_coverage does not exist
@@ -574,7 +567,7 @@ class TestPtr(unittest.TestCase):
                 self.loop.run_until_complete(
                     ptr._test_steps_runner(*tsr_params)  # pyre-ignore
                 ),
-                (None, 7) if no_pyre else (None, 8),
+                (None, 8) if no_pyre else (None, 9),
             )
 
             # Run everything but black + no print cov
@@ -585,11 +578,11 @@ class TestPtr(unittest.TestCase):
             self.assertEqual(
                 # pyre-ignore[6]: Tests ...
                 self.loop.run_until_complete(ptr._test_steps_runner(*tsr_params)),
-                (None, 6) if no_pyre else (None, 7),
+                (None, 7) if no_pyre else (None, 8),
             )
 
             # Run everything but test_suite with print_cov
-            expected_no_pyre_tests = (None, 6) if no_pyre else (None, 7)
+            expected_no_pyre_tests = (None, 7) if no_pyre else (None, 8)
             etp = deepcopy(ptr_tests_fixtures.EXPECTED_TEST_PARAMS)
             del etp["test_suite"]
             del etp["required_coverage"]

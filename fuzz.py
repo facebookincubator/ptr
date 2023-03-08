@@ -5,8 +5,9 @@
 # and is provided under the Creative Commons Zero public domain dedication.
 # Has since bee hacked then by humans
 
+from __future__ import annotations
+
 import asyncio
-import typing
 import unittest
 from collections import defaultdict
 from pathlib import Path
@@ -166,7 +167,7 @@ class TestPtrRunners(unittest.TestCase):
     @given(
         atonce=st.integers(min_value=1, max_value=64),
         mirror=st.text(),
-        tests_to_run=st.from_type(typing.Dict[Path, typing.Dict]),
+        tests_to_run=st.from_type(dict(Path, dict)),
         progress_interval=st.one_of(st.floats(), st.integers()),
         venv_path=st.one_of(st.none(), st.builds(Path)),
         venv_keep=st.booleans(),

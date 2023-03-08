@@ -9,12 +9,15 @@
 # pyre-ignore-all-errors[16]
 # pyre-ignore-all-errors[21]
 
+from __future__ import annotations
+
 import argparse
 import ast
 import asyncio
 import logging
 import sys
 from collections import defaultdict
+from collections.abc import Sequence
 from configparser import ConfigParser
 from enum import Enum
 from json import dump
@@ -26,7 +29,7 @@ from shutil import rmtree
 from subprocess import CalledProcessError
 from tempfile import gettempdir
 from time import time
-from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import Any, NamedTuple
 
 # Support pyproject.toml
 # In >= 3.11 we can remove this import dance
@@ -50,7 +53,7 @@ PYPROJECT_TOML = "pyproject.toml"
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
 # Need to use sys.platform for mypy to understand
-# https://mypy.readthedocs.io/en/latest/common_issues.html#python-version-and-system-platform-checks  # noqa: B950 # pylint: disable=C0301
+# https://mypy.readthedocs.io/en/latest/common_issues.html#python-version-and-system-platform-checks  # noqa: B950
 if sys.platform == "win32":
     asyncio.set_event_loop(asyncio.ProactorEventLoop())
 
@@ -72,7 +75,7 @@ def _config_default() -> ConfigParser:
 
 
 def _config_read(
-    cwd: str, conf_name: str = ".ptrconfig", cp: Optional[ConfigParser] = None
+    cwd: str, conf_name: str = ".ptrconfig", cp: ConfigParser | None = None
 ) -> ConfigParser:
     """Look from cwd to / for a "conf_name" file - If so read it in"""
     if cp is None:
@@ -129,7 +132,7 @@ class coverage_line(NamedTuple):
 class step(NamedTuple):
     step_name: StepName
     run_condition: bool
-    cmds: Tuple[str, ...]
+    cmds: tuple[str, ...]
     log_message: str
     timeout: float
 
@@ -142,7 +145,7 @@ class test_result(NamedTuple):
     timeout: bool
 
 
-def _get_site_packages_path(venv_path: Path) -> Optional[Path]:
+def _get_site_packages_path(venv_path: Path) -> None | Path:
     lib_path = venv_path / ("Lib" if WINDOWS else "lib")
     for apath in lib_path.iterdir():
         if apath.is_dir() and apath.match("python*"):
@@ -161,11 +164,11 @@ def _remove_pct_symbol(pct_str: str) -> str:
 def _analyze_coverage(
     venv_path: Path,
     setup_py_path: Path,
-    required_cov: Dict[str, float],
+    required_cov: dict[str, float],
     coverage_report: str,
-    stats: Dict[str, int],
+    stats: dict[str, int],
     test_run_start_time: float,
-) -> Optional[test_result]:
+) -> None | test_result:
     module_path = setup_py_path.parent
     site_packages_path = _get_site_packages_path(venv_path)
     if not site_packages_path:
@@ -270,7 +273,7 @@ def _analyze_coverage(
 
 def _max_osx_private_handle(
     potenital_path: str, site_packages_path: Path
-) -> Optional[Path]:
+) -> None | Path:
     """On Mac OS X `coverage` seems to always resolve /private for anything stored in /var.
     ptr's usage of gettempdir() seems to result in using dirs within there
     This function strips /private if it exists on the path supplied from coverage
@@ -288,7 +291,7 @@ def _max_osx_private_handle(
     return Path(potenital_path.replace("/private", ""))
 
 
-def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
+def _write_stats_file(stats_file: str, stats: dict[str, int]) -> None:
     stats_file_path = Path(stats_file)
     if not stats_file_path.is_absolute():
         stats_file_path = Path(CWD) / stats_file_path
@@ -301,13 +304,13 @@ def _write_stats_file(stats_file: str, stats: Dict[str, int]) -> None:
         )
 
 
-def _generate_black_cmd(module_dir: Path, black_exe: Path) -> Tuple[str, ...]:
+def _generate_black_cmd(module_dir: Path, black_exe: Path) -> tuple[str, ...]:
     return (str(black_exe), "--check", ".")
 
 
 def _generate_install_cmd(
-    pip_exe: str, module_dir: str, config: Dict[str, Any]
-) -> Tuple[str, ...]:
+    pip_exe: str, module_dir: str, config: dict[str, Any]
+) -> tuple[str, ...]:
     cmds = [pip_exe, "-v", "install", module_dir]
     if "tests_require" in config and config["tests_require"]:
         for dep in config["tests_require"]:
@@ -316,15 +319,15 @@ def _generate_install_cmd(
     return tuple(cmds)
 
 
-def _generate_test_suite_cmd(coverage_exe: Path, config: Dict) -> Tuple[str, ...]:
+def _generate_test_suite_cmd(coverage_exe: Path, config: dict) -> tuple[str, ...]:
     if config.get("test_suite", False):
         return (str(coverage_exe), "run", "-m", config["test_suite"])
     return ()
 
 
 def _generate_mypy_cmd(
-    module_dir: Path, mypy_exe: Path, config: Dict
-) -> Tuple[str, ...]:
+    module_dir: Path, mypy_exe: Path, config: dict
+) -> tuple[str, ...]:
     if config.get("run_mypy", False):
         mypy_entry_point = module_dir / f"{config['entry_point_module']}.py"
     else:
@@ -339,8 +342,8 @@ def _generate_mypy_cmd(
 
 
 def _generate_flake8_cmd(
-    module_dir: Path, flake8_exe: Path, config: Dict
-) -> Tuple[str, ...]:
+    module_dir: Path, flake8_exe: Path, config: dict
+) -> tuple[str, ...]:
     if not config.get("run_flake8", False):
         return ()
 
@@ -352,12 +355,12 @@ def _generate_flake8_cmd(
 
 
 def _generate_pylint_cmd(
-    module_dir: Path, pylint_exe: Path, config: Dict
-) -> Tuple[str, ...]:
+    module_dir: Path, pylint_exe: Path, config: dict
+) -> tuple[str, ...]:
     if not config.get("run_pylint", False):
         return ()
 
-    py_files: Set[str] = set()
+    py_files: set[str] = set()
     find_py_files(py_files, module_dir)
 
     cmds = [str(pylint_exe)]
@@ -368,8 +371,8 @@ def _generate_pylint_cmd(
 
 
 def _generate_pyre_cmd(
-    module_dir: Path, pyre_exe: Path, config: Dict
-) -> Tuple[str, ...]:
+    module_dir: Path, pyre_exe: Path, config: dict
+) -> tuple[str, ...]:
     if not config.get("run_pyre", False) or WINDOWS:
         return ()
 
@@ -377,18 +380,18 @@ def _generate_pyre_cmd(
 
 
 def _generate_usort_cmd(
-    module_dir: Path, usort_exe: Path, config: Dict
-) -> Tuple[str, ...]:
+    module_dir: Path, usort_exe: Path, config: dict
+) -> tuple[str, ...]:
     if not config.get("run_usort", False):
         return ()
 
-    py_files: Set[str] = set()
+    py_files: set[str] = set()
     find_py_files(py_files, module_dir)
 
     return (str(usort_exe), "check", *sorted(py_files))
 
 
-def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
+def _parse_setup_params(setup_py: Path) -> dict[str, Any]:
     with setup_py.open("r", encoding="utf8") as sp:
         setup_tree = ast.parse(sp.read())
 
@@ -408,10 +411,10 @@ def _parse_setup_params(setup_py: Path) -> Dict[str, Any]:
 
 def _get_test_modules(
     base_path: Path,
-    stats: Dict[str, int],
+    stats: dict[str, int],
     run_disabled: bool,
     print_non_configured: bool,
-) -> Dict[Path, Dict]:
+) -> dict[Path, dict]:
     get_tests_start_time = time()
     all_setup_pys = find_setup_pys(
         base_path,
@@ -421,8 +424,8 @@ def _get_test_modules(
     )
     stats["total.setup_pys"] = len(all_setup_pys)
 
-    non_configured_modules: List[Path] = []
-    test_modules: Dict[Path, Dict] = {}
+    non_configured_modules: list[Path] = []
+    test_modules: dict[Path, dict] = {}
     for setup_py in all_setup_pys:
         disabled_err_msg = f"Not running {setup_py} as ptr is disabled via config"
         # If a pyproject.toml or setup.cfg exists lets prefer them
@@ -476,10 +479,10 @@ def _validate_base_dir(base_dir: str) -> Path:
 
 async def _gen_check_output(
     cmd: Sequence[str],
-    timeout: Union[int, float] = 30,
-    env: Optional[Dict[str, str]] = None,
-    cwd: Optional[Path] = None,
-) -> Tuple[bytes, bytes]:
+    timeout: int | float = 30,
+    env: None | dict[str, str] = None,
+    cwd: None | Path = None,
+) -> tuple[bytes, bytes]:
     process = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -515,7 +518,7 @@ async def _progress_reporter(
     LOG.debug("progress_reporter finished")
 
 
-def _set_build_env(build_base_path: Optional[Path]) -> Dict[str, str]:
+def _set_build_env(build_base_path: None | Path) -> dict[str, str]:
     build_environ = environ.copy()
 
     if not build_base_path or not build_base_path.exists():
@@ -563,16 +566,16 @@ def _set_pip_mirror(
         print(PIP_CONF_TEMPLATE.format(mirror, timeout), file=pcfp)
 
 
-async def _test_steps_runner(  # pylint: disable=R0914
+async def _test_steps_runner(
     test_run_start_time: int,
-    tests_to_run: Dict[Path, Dict],
+    tests_to_run: dict[Path, dict],
     setup_py_path: Path,
     venv_path: Path,
-    env: Dict,
-    stats: Dict[str, int],
+    env: dict,
+    stats: dict[str, int],
     error_on_warnings: bool,
     print_cov: bool = False,
-) -> Tuple[Optional[test_result], int]:
+) -> tuple[None | test_result, int]:
     bin_dir = "Scripts" if WINDOWS else "bin"
     exe = ".exe" if WINDOWS else ""
     black_exe = venv_path / bin_dir / f"black{exe}"
@@ -736,11 +739,11 @@ async def _test_steps_runner(  # pylint: disable=R0914
 
 async def _test_runner(
     queue: asyncio.Queue,
-    tests_to_run: Dict[Path, Dict],
-    test_results: List[test_result],
+    tests_to_run: dict[Path, dict],
+    test_results: list[test_result],
     venv_path: Path,
     print_cov: bool,
-    stats: Dict[str, int],
+    stats: dict[str, int],
     error_on_warnings: bool,
     idx: int,
 ) -> None:
@@ -794,7 +797,7 @@ async def create_venv(
     install_pkgs: bool = True,
     timeout: float = VENV_TIMEOUT,
     system_site_packages: bool = False,
-) -> Optional[Path]:
+) -> None | Path:
     start_time = time()
     venv_path = Path(gettempdir()) / f"ptr_venv_{getpid()}"
     if WINDOWS:
@@ -802,7 +805,7 @@ async def create_venv(
     else:
         pip_exe = venv_path / "bin" / "pip"
 
-    install_cmd: List[str] = []
+    install_cmd: list[str] = []
     try:
         cmd = [py_exe, "-m", "venv", str(venv_path)]
         if system_site_packages:
@@ -827,7 +830,7 @@ async def create_venv(
     return venv_path
 
 
-def find_py_files(py_files: Set[str], base_dir: Path) -> None:
+def find_py_files(py_files: set[str], base_dir: Path) -> None:
     dirs = [d for d in base_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
     py_files.update(
         {str(x) for x in base_dir.iterdir() if x.is_file() and x.suffix == ".py"}
@@ -837,7 +840,7 @@ def find_py_files(py_files: Set[str], base_dir: Path) -> None:
 
 
 def _recursive_find_files(
-    files: Set[Path], base_dir: Path, exclude_patterns: Set[str], follow_symlinks: bool
+    files: set[Path], base_dir: Path, exclude_patterns: set[str], follow_symlinks: bool
 ) -> None:
     if not base_dir.exists():
         return
@@ -865,17 +868,17 @@ def _recursive_find_files(
 
 
 def find_setup_pys(
-    base_path: Path, exclude_patterns: Set[str], follow_symlinks: bool = False
-) -> Set[Path]:
-    setup_pys: Set[Path] = set()
+    base_path: Path, exclude_patterns: set[str], follow_symlinks: bool = False
+) -> set[Path]:
+    setup_pys: set[Path] = set()
     _recursive_find_files(setup_pys, base_path, exclude_patterns, follow_symlinks)
     return setup_pys
 
 
 def parse_pyproject_toml(
     setup_py: Path, tool_section: str = "tool", ptr_section: str = "ptr"
-) -> Dict[str, Any]:
-    ptr_params: Dict[str, Any] = {}
+) -> dict[str, Any]:
+    ptr_params: dict[str, Any] = {}
     pyproject_toml_path = setup_py.parent / PYPROJECT_TOML
     if not pyproject_toml_path.exists():
         return ptr_params
@@ -891,9 +894,9 @@ def parse_pyproject_toml(
     return ptr_params
 
 
-def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
+def parse_setup_cfg(setup_py: Path) -> dict[str, Any]:
     req_cov_key_strip = "required_coverage_"
-    ptr_params: Dict[str, Any] = {}
+    ptr_params: dict[str, Any] = {}
     setup_cfg = setup_py.parent / "setup.cfg"
     if not setup_cfg.exists():
         return ptr_params
@@ -921,15 +924,15 @@ def parse_setup_cfg(setup_py: Path) -> Dict[str, Any]:
     return ptr_params
 
 
-def print_non_configured_modules(modules: List[Path]) -> None:
+def print_non_configured_modules(modules: list[Path]) -> None:
     print(f"== {len(modules)} non ptr configured modules ==")
     for module in sorted(modules):
         print(f" - {str(module)}")
 
 
 def print_test_results(
-    test_results: Sequence[test_result], stats: Optional[Dict[str, int]] = None
-) -> Dict[str, int]:
+    test_results: Sequence[test_result], stats: None | dict[str, int] = None
+) -> dict[str, int]:
     if not stats:
         stats = defaultdict(int)
 
@@ -985,12 +988,12 @@ def print_test_results(
 async def run_tests(
     atonce: int,
     mirror: str,
-    tests_to_run: Dict[Path, Dict],
-    progress_interval: Union[float, int],
-    venv_path: Optional[Path],
+    tests_to_run: dict[Path, dict],
+    progress_interval: float,
+    venv_path: None | Path,
     venv_keep: bool,
     print_cov: bool,
-    stats: Dict[str, int],
+    stats: dict[str, int],
     stats_file: str,
     venv_timeout: float,
     error_on_warnings: bool,
@@ -1019,7 +1022,7 @@ async def run_tests(
     for test_setup_py in sorted(tests_to_run.keys()):
         await queue.put(test_setup_py)
 
-    test_results: List[test_result] = []
+    test_results: list[test_result] = []
     consumers = [
         _test_runner(
             queue,
@@ -1073,7 +1076,7 @@ async def async_main(
     error_on_warnings: bool,
     system_site_packages: bool,
 ) -> int:
-    stats: Dict[str, int] = defaultdict(int)
+    stats: dict[str, int] = defaultdict(int)
     tests_to_run = _get_test_modules(
         base_path, stats, run_disabled, print_non_configured
     )
@@ -1087,7 +1090,7 @@ async def async_main(
         return 0
 
     try:
-        venv_path: Optional[Path] = Path(venv)
+        venv_path: None | Path = Path(venv)
         if venv_path and not venv_path.exists():
             LOG.error(f"{venv_path} venv does not exist. Please correct!")
             return 2
