@@ -12,6 +12,7 @@ import unittest
 from collections import defaultdict
 from pathlib import Path
 from tempfile import gettempdir
+from typing import Dict
 from unittest.mock import MagicMock, patch
 
 import ptr
@@ -167,7 +168,7 @@ class TestPtrRunners(unittest.TestCase):
     @given(
         atonce=st.integers(min_value=1, max_value=64),
         mirror=st.text(),
-        tests_to_run=st.from_type(dict(Path, dict)),
+        tests_to_run=st.from_type(Dict[Path, dict]),
         progress_interval=st.one_of(st.floats(), st.integers()),
         venv_path=st.one_of(st.none(), st.builds(Path)),
         venv_keep=st.booleans(),
