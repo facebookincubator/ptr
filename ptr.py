@@ -46,10 +46,6 @@ else:
 
 LOG = logging.getLogger(__name__)
 MACOSX = system() == "Darwin"
-# To make main use asyncio.run and unittests to test approrpiately for older cpython
-# Using 3.8 rather than 3.7 due to subprocess.exec in < 3.8 only support main loop
-# https://bugs.python.org/issue35621
-PY_38_OR_GREATER = sys.version_info >= (3, 8)
 PYPROJECT_TOML = "pyproject.toml"
 WINDOWS = system() == "Windows"
 # Windows needs to use a ProactorEventLoop for subprocesses
@@ -1193,21 +1189,6 @@ def main() -> None:
     _handle_debug(args.debug)
 
     LOG.info(f"Starting {sys.argv[0]}")
-    main_coro = async_main(
-        args.atonce,
-        _validate_base_dir(args.base_dir),
-        args.mirror,
-        args.progress_interval,
-        args.venv,
-        args.keep_venv,
-        args.print_cov,
-        args.print_non_configured,
-        args.run_disabled,
-        args.stats_file,
-        args.venv_timeout,
-        args.error_on_warnings,
-        args.system_site_packages,
-    )
     sys.exit(
         asyncio.run(
             async_main(

@@ -72,15 +72,11 @@ class TestPtr(unittest.TestCase):
     maxDiff = 2000
 
     def setUp(self) -> None:
-        if ptr.PY_38_OR_GREATER:
-            self.loop = asyncio.new_event_loop()
-        else:
-            self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
         return super().setUp()
 
     def tearDown(self) -> None:
-        if ptr.PY_38_OR_GREATER:
-            self.loop.close()
+        self.loop.close()
         return super().tearDown()
 
     @patch("ptr._get_site_packages_path")
@@ -417,14 +413,9 @@ class TestPtr(unittest.TestCase):
     @patch("ptr._validate_base_dir")
     @patch("ptr.argparse.ArgumentParser.parse_args")
     def test_main(self, mock_args: Mock, mock_validate: Mock) -> None:
-        # Can't mock stdlib functions that don't exist in older cpython
-        if ptr.PY_38_OR_GREATER:
-            with patch("ptr.asyncio.run") as mock_run, self.assertRaises(SystemExit):
-                ptr.main()
-                self.assertTrue(mock_run.called)
-        else:
-            with self.assertRaises(SystemExit):
-                ptr.main()
+        with patch("ptr.asyncio.run") as mock_run, self.assertRaises(SystemExit):
+            ptr.main()
+            self.assertTrue(mock_run.called)
 
     def test_parse_pyproject_toml(self) -> None:
         tmp_dir = Path(gettempdir())
