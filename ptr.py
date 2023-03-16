@@ -1208,17 +1208,25 @@ def main() -> None:
         args.error_on_warnings,
         args.system_site_packages,
     )
-    # This is gated to >= 3.8 for unittests
-    # Once we're >= 3.7 tests could be refactored so we can use
-    # asyncio.run in 3.7
-    if getattr(asyncio, "run", None) and PY_38_OR_GREATER:
-        sys.exit(asyncio.run(main_coro))
-    else:
-        loop = asyncio.get_event_loop()
-        try:
-            sys.exit(loop.run_until_complete(main_coro))
-        finally:
-            loop.close()
+    sys.exit(
+        asyncio.run(
+            async_main(
+                args.atonce,
+                _validate_base_dir(args.base_dir),
+                args.mirror,
+                args.progress_interval,
+                args.venv,
+                args.keep_venv,
+                args.print_cov,
+                args.print_non_configured,
+                args.run_disabled,
+                args.stats_file,
+                args.venv_timeout,
+                args.error_on_warnings,
+                args.system_site_packages,
+            )
+        )
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover
